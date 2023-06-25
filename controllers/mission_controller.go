@@ -19,7 +19,9 @@ package controllers
 import (
 	"context"
 
+	v1ext "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
 	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/types"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/log"
@@ -38,6 +40,13 @@ type MissionReconciler struct {
 
 func (r *MissionReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	_ = log.FromContext(ctx)
+	crd := &v1ext.CustomResourceDefinition{}
+	err := r.Get(ctx, types.NamespacedName{Name: "providers.pkg.crossplane.io"}, crd)
+	if err != nil {
+		return ctrl.Result{}, err
+	}
+
+	ctrl.Log.Info("All seems correct")
 
 	return ctrl.Result{}, nil
 }
