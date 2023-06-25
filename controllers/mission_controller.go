@@ -23,18 +23,22 @@ import (
 
 	apiextensionsclientset "k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/runtime"
-	"k8s.io/client-go/tools/clientcmd"
+	runtime "k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/types"
+	clientcmd "k8s.io/client-go/tools/clientcmd"
+	record "k8s.io/client-go/tools/record"
 	ctrl "sigs.k8s.io/controller-runtime"
-	"sigs.k8s.io/controller-runtime/pkg/client"
-	"sigs.k8s.io/controller-runtime/pkg/log"
+	client "sigs.k8s.io/controller-runtime/pkg/client"
+	log "sigs.k8s.io/controller-runtime/pkg/log"
 
+	"github.com/holy-tech/Mission-Control-Operator/api/v1alpha1"
 	missionv1alpha1 "github.com/holy-tech/Mission-Control-Operator/api/v1alpha1"
 )
 
 type MissionReconciler struct {
 	client.Client
-	Scheme *runtime.Scheme
+	Scheme   *runtime.Scheme
+	Recorder record.EventRecorder
 }
 
 type Config struct {
@@ -45,20 +49,27 @@ type Config struct {
 //+kubebuilder:rbac:groups=mission.mission-control.apis.io,resources=missions,verbs=get;list;watch;create;update;patch;delete
 //+kubebuilder:rbac:groups=mission.mission-control.apis.io,resources=missions/status,verbs=get;update;patch
 //+kubebuilder:rbac:groups=mission.mission-control.apis.io,resources=missions/finalizers,verbs=update
+//+kubebuilder:rbac:groups="",resources=events,verbs=create;patch
 
 func (r *MissionReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	_ = log.FromContext(ctx)
 
+	mission := &v1alpha1.Mission{}
+	err := r.Get(ctx, types.NamespacedName{Name: req.Name}, mission)
+	if err != nil {
+		return ctrl.Result{}, err
+	}
+
 	clientConfig, _ := clientcmd.BuildConfigFromFlags("", os.Getenv("HOME")+"/.kube/config")
 	clientset, _ := apiextensionsclientset.NewForConfig(clientConfig)
-	_, err := clientset.ApiextensionsV1().CustomResourceDefinitions().Get(ctx, "providers.pkg.crossplane.io", v1.GetOptions{})
+	_, err = clientset.ApiextensionsV1().CustomResourceDefinitions().Get(ctx, "providers.pkg.crossplane.io", v1.GetOptions{})
 
 	if err != nil {
+		r.Recorder.Event(mission, "Warning", "Failed", "Crossplane installation not found")
 		return ctrl.Result{}, errors.New("Could not find crossplane CRD \"Provider\"")
 	}
 
-	ctrl.Log.Info("All seems correct")
-
+	r.Recorder.Event(mission, "Normal", "Success", "Mission correctly connected to Crossplane")
 	return ctrl.Result{}, nil
 }
 
