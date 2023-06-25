@@ -1,0 +1,6 @@
+domain: mission-control.apis.io
+layout:
+- go.kubebuilder.io/v3
+projectName: mission-control-operator
+repo: github.com/holy-tech/Mission-Control-Operator
+version: "3"
