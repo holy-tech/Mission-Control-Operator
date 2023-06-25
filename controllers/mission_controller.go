@@ -18,10 +18,13 @@ package controllers
 
 import (
 	"context"
+	"errors"
+	"os"
 
-	v1ext "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
+	apiextensionsclientset "k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset"
+	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
-	"k8s.io/apimachinery/pkg/types"
+	"k8s.io/client-go/tools/clientcmd"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/log"
@@ -34,16 +37,24 @@ type MissionReconciler struct {
 	Scheme *runtime.Scheme
 }
 
+type Config struct {
+	crdNamespace   string
+	kubeconfigPath string
+}
+
 //+kubebuilder:rbac:groups=mission.mission-control.apis.io,resources=missions,verbs=get;list;watch;create;update;patch;delete
 //+kubebuilder:rbac:groups=mission.mission-control.apis.io,resources=missions/status,verbs=get;update;patch
 //+kubebuilder:rbac:groups=mission.mission-control.apis.io,resources=missions/finalizers,verbs=update
 
 func (r *MissionReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	_ = log.FromContext(ctx)
-	crd := &v1ext.CustomResourceDefinition{}
-	err := r.Get(ctx, types.NamespacedName{Name: "providers.pkg.crossplane.io"}, crd)
+
+	clientConfig, _ := clientcmd.BuildConfigFromFlags("", os.Getenv("HOME")+"/.kube/config")
+	clientset, _ := apiextensionsclientset.NewForConfig(clientConfig)
+	_, err := clientset.ApiextensionsV1().CustomResourceDefinitions().Get(ctx, "providers.pkg.crossplane.io", v1.GetOptions{})
+
 	if err != nil {
-		return ctrl.Result{}, err
+		return ctrl.Result{}, errors.New("Could not find crossplane CRD \"Provider\"")
 	}
 
 	ctrl.Log.Info("All seems correct")
