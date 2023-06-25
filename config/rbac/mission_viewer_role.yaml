@@ -1,0 +1,20 @@
+# permissions for end users to view missions.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: mission-viewer-role
+rules:
+- apiGroups:
+  - mission.mission-control.apis.io
+  resources:
+  - missions
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - mission.mission-control.apis.io
+  resources:
+  - missions/status
+  verbs:
+  - get
