@@ -10,7 +10,7 @@ jobs:
       - run: go install github.com/holy-tech/Mission-Control-Operator
   lint:
     docker:
-      - image: golangci/golangci-lint:v1.37-alpine
+      - image: golangci/golangci-lint:v1.53-alpine
     steps:
       - checkout
       - run: golangci-lint run
