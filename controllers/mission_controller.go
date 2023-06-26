@@ -19,6 +19,7 @@ package controllers
 import (
 	"context"
 	"errors"
+	"fmt"
 	"os"
 
 	apiextensionsclientset "k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset"
@@ -33,12 +34,19 @@ import (
 
 	"github.com/holy-tech/Mission-Control-Operator/api/v1alpha1"
 	missionv1alpha1 "github.com/holy-tech/Mission-Control-Operator/api/v1alpha1"
+	"github.com/holy-tech/Mission-Control-Operator/controllers/utils"
 )
 
 type MissionReconciler struct {
 	client.Client
 	Scheme   *runtime.Scheme
 	Recorder record.EventRecorder
+}
+
+var Provider2CRD = map[string]string{
+	"GCP":   "",
+	"AWS":   "",
+	"AZURE": "",
 }
 
 //+kubebuilder:rbac:groups=mission.mission-control.apis.io,resources=missions,verbs=get;list;watch;create;update;patch;delete
@@ -57,7 +65,22 @@ func (r *MissionReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ct
 
 	if r.ConfirmCRD(ctx, "providers.pkg.crossplane.io") != nil {
 		r.Recorder.Event(mission, "Warning", "Failed", "Crossplane installation not found")
-		return ctrl.Result{}, errors.New("Could not find crossplane CRD \"Provider\"")
+		return ctrl.Result{}, errors.New("could not find crossplane CRD \"Provider\"")
+	}
+
+	for _, p := range mission.Spec.Packages {
+		if utils.Contains(utils.GetValues(Provider2CRD), p) {
+			providerCRD := Provider2CRD[p]
+			if r.ConfirmCRD(ctx, providerCRD) != nil {
+				message := fmt.Sprintf("Could not find provider %s, ensure provider is installed", p)
+				r.Recorder.Event(mission, "Warning", "Provider Not Installed", message)
+				return ctrl.Result{}, errors.New(message)
+			}
+		} else {
+			message := fmt.Sprintf("Provider not allowed please choose of the following (%v)", utils.GetValues(Provider2CRD))
+			r.Recorder.Event(mission, "Warning", "Provider Not Known", message)
+			return ctrl.Result{}, errors.New(message)
+		}
 	}
 
 	r.Recorder.Event(mission, "Normal", "Success", "Mission correctly connected to Crossplane")
