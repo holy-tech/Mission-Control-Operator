@@ -1,16 +1,30 @@
 version: 2.1
 
 jobs:
-  say-hello:
+  build:
     docker:
-      - image: cimg/base:stable
+      - image: golang:1.16-alpine
+    working_directory: /go/src/Mission-Control-Operator
     steps:
       - checkout
-      - run:
-          name: "Say hello"
-          command: "echo Hello, World!"
+      - run: go install github.com/holy-tech/Mission-Control-Operator
+  lint:
+    docker:
+      - image: golangci/golangci-lint:v1.37-alpine
+    steps:
+      - checkout
+      - run: golangci-lint run
+  test:
+    docker:
+      - image: golang:1.16
+    working_directory: /go/src/Mission-Control-Operator
+    steps:
+      - checkout
+      - run: go test -v -race ./...
 
 workflows:
-  say-hello-workflow:
+  build_lint_test:
     jobs:
-      - say-hello
+      - build
+      - lint
+      - test
