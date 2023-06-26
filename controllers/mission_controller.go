@@ -41,11 +41,6 @@ type MissionReconciler struct {
 	Recorder record.EventRecorder
 }
 
-type Config struct {
-	crdNamespace   string
-	kubeconfigPath string
-}
-
 //+kubebuilder:rbac:groups=mission.mission-control.apis.io,resources=missions,verbs=get;list;watch;create;update;patch;delete
 //+kubebuilder:rbac:groups=mission.mission-control.apis.io,resources=missions/status,verbs=get;update;patch
 //+kubebuilder:rbac:groups=mission.mission-control.apis.io,resources=missions/finalizers,verbs=update
