@@ -3,4 +3,4 @@ kind: Mission
 metadata:
   name: mission-sample
 spec:
-  # TODO(user): Add fields here
+  packages: []

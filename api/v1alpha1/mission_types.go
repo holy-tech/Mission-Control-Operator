@@ -21,10 +21,11 @@ import (
 )
 
 type MissionSpec struct {
-	Name string `json:"name,omitempty"`
+	Packages []string `json:"packages,omitempty"`
 }
 
 type MissionStatus struct {
+	PackageStatus []string `json:"package_status,omitempty"`
 }
 
 //+kubebuilder:object:root=true

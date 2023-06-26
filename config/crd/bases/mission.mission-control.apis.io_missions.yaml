@@ -33,10 +33,17 @@ spec:
             type: object
           spec:
             properties:
-              name:
-                type: string
+              packages:
+                items:
+                  type: string
+                type: array
             type: object
           status:
+            properties:
+              package_status:
+                items:
+                  type: string
+                type: array
             type: object
         type: object
     served: true
