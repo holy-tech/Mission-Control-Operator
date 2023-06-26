@@ -60,17 +60,20 @@ func (r *MissionReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ct
 		return ctrl.Result{}, err
 	}
 
-	clientConfig, _ := clientcmd.BuildConfigFromFlags("", os.Getenv("HOME")+"/.kube/config")
-	clientset, _ := apiextensionsclientset.NewForConfig(clientConfig)
-	_, err = clientset.ApiextensionsV1().CustomResourceDefinitions().Get(ctx, "providers.pkg.crossplane.io", v1.GetOptions{})
-
-	if err != nil {
+	if r.ConfirmCRD(ctx, "providers.pkg.crossplane.io") != nil {
 		r.Recorder.Event(mission, "Warning", "Failed", "Crossplane installation not found")
 		return ctrl.Result{}, errors.New("Could not find crossplane CRD \"Provider\"")
 	}
 
 	r.Recorder.Event(mission, "Normal", "Success", "Mission correctly connected to Crossplane")
 	return ctrl.Result{}, nil
+}
+
+func (r *MissionReconciler) ConfirmCRD(ctx context.Context, crdNameVersion string) error {
+	clientConfig, _ := clientcmd.BuildConfigFromFlags("", os.Getenv("HOME")+"/.kube/config")
+	clientset, _ := apiextensionsclientset.NewForConfig(clientConfig)
+	_, err := clientset.ApiextensionsV1().CustomResourceDefinitions().Get(ctx, crdNameVersion, v1.GetOptions{})
+	return err
 }
 
 func (r *MissionReconciler) SetupWithManager(mgr ctrl.Manager) error {
