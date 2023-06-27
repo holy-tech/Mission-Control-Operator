@@ -32,7 +32,6 @@ import (
 	client "sigs.k8s.io/controller-runtime/pkg/client"
 	log "sigs.k8s.io/controller-runtime/pkg/log"
 
-	"github.com/holy-tech/Mission-Control-Operator/api/v1alpha1"
 	missionv1alpha1 "github.com/holy-tech/Mission-Control-Operator/api/v1alpha1"
 	"github.com/holy-tech/Mission-Control-Operator/controllers/utils"
 )
@@ -44,7 +43,7 @@ type MissionReconciler struct {
 }
 
 var Provider2CRD = map[string]string{
-	"GCP":   "",
+	"GCP":   "providerconfigs.gcp.upbound.io",
 	"AWS":   "",
 	"AZURE": "",
 }
@@ -57,7 +56,7 @@ var Provider2CRD = map[string]string{
 func (r *MissionReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	_ = log.FromContext(ctx)
 
-	mission := &v1alpha1.Mission{}
+	mission := &missionv1alpha1.Mission{}
 	err := r.Get(ctx, types.NamespacedName{Name: req.Name}, mission)
 	if err != nil {
 		return ctrl.Result{}, err
@@ -69,17 +68,9 @@ func (r *MissionReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ct
 	}
 
 	for _, p := range mission.Spec.Packages {
-		if utils.Contains(utils.GetValues(Provider2CRD), p) {
-			providerCRD := Provider2CRD[p]
-			if r.ConfirmCRD(ctx, providerCRD) != nil {
-				message := fmt.Sprintf("Could not find provider %s, ensure provider is installed", p)
-				r.Recorder.Event(mission, "Warning", "Provider Not Installed", message)
-				return ctrl.Result{}, errors.New(message)
-			}
-		} else {
-			message := fmt.Sprintf("Provider not allowed please choose of the following (%v)", utils.GetValues(Provider2CRD))
-			r.Recorder.Event(mission, "Warning", "Provider Not Known", message)
-			return ctrl.Result{}, errors.New(message)
+		err := r.ConfirmProvider(ctx, mission, p)
+		if err != nil {
+			return ctrl.Result{}, err
 		}
 	}
 
@@ -92,6 +83,22 @@ func (r *MissionReconciler) ConfirmCRD(ctx context.Context, crdNameVersion strin
 	clientset, _ := apiextensionsclientset.NewForConfig(clientConfig)
 	_, err := clientset.ApiextensionsV1().CustomResourceDefinitions().Get(ctx, crdNameVersion, v1.GetOptions{})
 	return err
+}
+
+func (r *MissionReconciler) ConfirmProvider(ctx context.Context, mission *missionv1alpha1.Mission, provider string) error {
+	if utils.Contains(utils.GetValues(Provider2CRD), provider) {
+		providerCRD := Provider2CRD[provider]
+		if r.ConfirmCRD(ctx, providerCRD) != nil {
+			message := fmt.Sprintf("Could not find provider %s, ensure provider is installed", provider)
+			r.Recorder.Event(mission, "Warning", "Provider Not Installed", message)
+			return errors.New(message)
+		}
+	} else {
+		message := fmt.Sprintf("Provider not allowed please choose of the following (%v)", utils.GetValues(Provider2CRD))
+		r.Recorder.Event(mission, "Warning", "Provider Not Known", message)
+		return errors.New(message)
+	}
+	return nil
 }
 
 func (r *MissionReconciler) SetupWithManager(mgr ctrl.Manager) error {
