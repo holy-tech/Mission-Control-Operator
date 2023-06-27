@@ -75,6 +75,10 @@ func (r *MissionReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ct
 			return ctrl.Result{}, err
 		}
 	}
+	err = r.ReconcileStatus(ctx, mission)
+	if err != nil {
+		return ctrl.Result{}, err
+	}
 
 	r.Recorder.Event(mission, "Normal", "Success", "Mission correctly connected to Crossplane")
 	return ctrl.Result{}, nil
@@ -101,6 +105,13 @@ func (r *MissionReconciler) ConfirmProvider(ctx context.Context, mission *missio
 		return errors.New(message)
 	}
 	return nil
+}
+
+func (r *MissionReconciler) ReconcileStatus(ctx context.Context, mission *missionv1alpha1.Mission) error {
+	if len(mission.Status.PackageStatus) == 0 {
+		mission.Status.PackageStatus = append(mission.Status.PackageStatus, missionv1alpha1.MissionPackageStatus{Name: "packagenamehere"})
+	}
+	return r.Status().Update(ctx, mission)
 }
 
 func (r *MissionReconciler) SetupWithManager(mgr ctrl.Manager) error {

@@ -20,12 +20,16 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
+type MissionPackageStatus struct {
+	Name string `json:"name,omitempty"`
+}
+
 type MissionSpec struct {
 	Packages []string `json:"packages,omitempty"`
 }
 
 type MissionStatus struct {
-	PackageStatus []string `json:"package_status,omitempty"`
+	PackageStatus []MissionPackageStatus `json:"package_status,omitempty"`
 }
 
 //+kubebuilder:object:root=true

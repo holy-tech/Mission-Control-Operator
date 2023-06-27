@@ -42,7 +42,10 @@ spec:
             properties:
               package_status:
                 items:
-                  type: string
+                  properties:
+                    name:
+                      type: string
+                  type: object
                 type: array
             type: object
         type: object
