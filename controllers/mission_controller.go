@@ -62,11 +62,13 @@ func (r *MissionReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ct
 		return ctrl.Result{}, err
 	}
 
+	// Confirm that crossplane is installed in the kubernetes cluster
 	if r.ConfirmCRD(ctx, "providers.pkg.crossplane.io") != nil {
 		r.Recorder.Event(mission, "Warning", "Failed", "Crossplane installation not found")
 		return ctrl.Result{}, errors.New("could not find crossplane CRD \"Provider\"")
 	}
 
+	// Check that the packages being used in specified mission are installed in the cluster and are supported
 	for _, p := range mission.Spec.Packages {
 		err := r.ConfirmProvider(ctx, mission, p)
 		if err != nil {
