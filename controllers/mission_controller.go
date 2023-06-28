@@ -108,9 +108,13 @@ func (r *MissionReconciler) ConfirmProvider(ctx context.Context, mission *missio
 }
 
 func (r *MissionReconciler) ReconcileStatus(ctx context.Context, mission *missionv1alpha1.Mission) error {
-	if len(mission.Status.PackageStatus) == 0 {
-		mission.Status.PackageStatus = append(mission.Status.PackageStatus, missionv1alpha1.MissionPackageStatus{Name: "packagenamehere"})
+	ps := []missionv1alpha1.MissionPackageStatus{}
+	for _, p := range mission.Spec.Packages {
+		ps = append(ps, missionv1alpha1.MissionPackageStatus{
+			Name: p,
+		})
 	}
+	mission.Status.PackageStatus = ps
 	return r.Status().Update(ctx, mission)
 }
 
