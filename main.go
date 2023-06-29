@@ -23,12 +23,15 @@ import (
 	_ "k8s.io/client-go/plugin/pkg/client/auth"
 
 	"k8s.io/apimachinery/pkg/runtime"
+	apischeme "k8s.io/apimachinery/pkg/runtime/schema"
 	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
 	clientgoscheme "k8s.io/client-go/kubernetes/scheme"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/healthz"
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
+	controllerscheme "sigs.k8s.io/controller-runtime/pkg/scheme"
 
+	cpv1 "github.com/crossplane/crossplane/apis/pkg/v1"
 	missionv1alpha1 "github.com/holy-tech/Mission-Control-Operator/api/v1alpha1"
 	"github.com/holy-tech/Mission-Control-Operator/controllers"
 	//+kubebuilder:scaffold:imports
@@ -43,6 +46,11 @@ func init() {
 	utilruntime.Must(clientgoscheme.AddToScheme(scheme))
 
 	utilruntime.Must(missionv1alpha1.AddToScheme(scheme))
+	schemeBuilder := &controllerscheme.Builder{GroupVersion: apischeme.GroupVersion{Group: "pkg.crossplane.io", Version: "v1"}}
+	schemeBuilder.Register(&cpv1.Provider{}, &cpv1.ProviderList{})
+	if err := schemeBuilder.AddToScheme(scheme); err != nil {
+		os.Exit(1)
+	}
 	//+kubebuilder:scaffold:scheme
 }
 
