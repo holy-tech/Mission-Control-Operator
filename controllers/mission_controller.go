@@ -106,12 +106,16 @@ func (r *MissionReconciler) ConfirmProvider(ctx context.Context, mission *missio
 }
 
 func (r *MissionReconciler) ReconcilePackageStatus(ctx context.Context, mission *missionv1alpha1.Mission, provider *cpv1.Provider) error {
+	if mission.Status.PackageStatus == nil {
+		mission.Status.PackageStatus = map[string]missionv1alpha1.MissionPackageStatus{}
+	}
 	ps := mission.Status.PackageStatus[provider.Name]
 	for _, c := range provider.Status.Conditions {
 		if c.Type == "Installed" {
 			ps.Installed = string(c.Status)
 		}
 	}
+	mission.Status.PackageStatus[provider.Name] = ps
 	return r.Status().Update(ctx, mission)
 }
 
