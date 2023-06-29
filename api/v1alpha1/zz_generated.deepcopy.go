@@ -124,8 +124,10 @@ func (in *MissionStatus) DeepCopyInto(out *MissionStatus) {
 	*out = *in
 	if in.PackageStatus != nil {
 		in, out := &in.PackageStatus, &out.PackageStatus
-		*out = make([]MissionPackageStatus, len(*in))
-		copy(*out, *in)
+		*out = make(map[string]MissionPackageStatus, len(*in))
+		for key, val := range *in {
+			(*out)[key] = val
+		}
 	}
 }
 

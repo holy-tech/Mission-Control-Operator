@@ -21,7 +21,7 @@ import (
 )
 
 type MissionPackageStatus struct {
-	Name string `json:"name,omitempty"`
+	Installed string `json:"installed,omitempty"`
 }
 
 type MissionSpec struct {
@@ -29,7 +29,7 @@ type MissionSpec struct {
 }
 
 type MissionStatus struct {
-	PackageStatus []MissionPackageStatus `json:"package_status,omitempty"`
+	PackageStatus map[string]MissionPackageStatus `json:"package_status,omitempty"`
 }
 
 //+kubebuilder:object:root=true
