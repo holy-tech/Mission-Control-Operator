@@ -1,4 +1,6 @@
 # mission-control-operator
+[![CircleCI](https://dl.circleci.com/status-badge/img/gh/holy-tech/Mission-Control-Operator/tree/main.svg?style=svg)](https://dl.circleci.com/status-badge/redirect/gh/holy-tech/Mission-Control-Operator/tree/main)
+
 // TODO(user): Add simple overview of use/purpose
 
 ## Description
