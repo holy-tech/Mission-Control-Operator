@@ -1,0 +1,23 @@
+# Changelog
+All notable changes to this project will be documented in this file.
+
+The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
+and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+
+## [Unreleased]
+### Added
+- Changelog for release announcements.
+
+### Changed
+- Fixed CICD linting and added artifacts for outputs.
+- Changed linting image to "golangci/golangci-lint:v1.53"
+
+## [0.1.0] - 08-29-2023
+### Added
+- Basic project structure with kubebuilder
+- Mission operator and simple attributes
+- License Apache v2.0
+- Various developer tooling such as docker-compose and CICD through CircleCI
+- Review if required providers are installed (WIP)
+
+[0.1.0]: https://github.com/holy-tech/Mission-Control-Operator/releases/tag/v0.1.0
