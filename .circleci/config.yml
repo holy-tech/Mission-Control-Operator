@@ -15,7 +15,7 @@ jobs:
       - checkout
       - run: make ci-lint > golanci-report.xml
       - persist_to_workspace:
-          root: ~/repo
+          root: /go/src/Mission-Control-Operator
           paths:
             - golanci-report.xml
   test:
