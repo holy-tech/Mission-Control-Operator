@@ -87,15 +87,15 @@ func (r *MissionReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ct
 func (r *MissionReconciler) ConfirmProvider(ctx context.Context, mission *missionv1alpha1.Mission, providerName string) error {
 	if utils.Contains(utils.GetValues(ProviderMapping), providerName) {
 		k8providerName := ProviderMapping[providerName]
-		if p, err := r.GetProvider(ctx, k8providerName); err != nil {
+		p, err := r.GetProvider(ctx, k8providerName)
+		if err != nil {
 			message := fmt.Sprintf("Could not find provider %s, ensure provider is installed", k8providerName)
 			r.Recorder.Event(mission, "Warning", "Provider Not Installed", message)
 			return errors.New(message)
-		} else {
-			err = r.ReconcilePackageStatus(ctx, mission, p)
-			if err != nil {
-				return err
-			}
+		}
+		err = r.ReconcilePackageStatus(ctx, mission, p)
+		if err != nil {
+			return err
 		}
 	} else {
 		message := fmt.Sprintf("Provider not allowed please choose of the following (%v)", utils.GetValues(ProviderMapping))

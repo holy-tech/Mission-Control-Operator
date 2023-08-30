@@ -117,3 +117,7 @@ $(ENVTEST): $(LOCALBIN)
 .PHONY: lint
 lint: 
 	@golangci-lint run -v
+
+.PHONY: ci-lint
+ci-lint: 
+	@golangci-lint run ./... --out-format=checkstyle --print-issued-lines=false --print-linter-name=false --issues-exit-code=0 --enable=revive --timeout=120s
