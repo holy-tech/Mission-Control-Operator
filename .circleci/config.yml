@@ -10,11 +10,14 @@ jobs:
       - run: go install github.com/holy-tech/Mission-Control-Operator
   lint:
     docker:
-      - image: golang:1.20
+      - image: golangci/golangci-lint:v1.53
     steps:
       - checkout
-      - run: curl -sfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh| sh -s -- -b $(go env GOPATH)/bin v1.20.0
-      - run: make lint
+      - run: make ci-lint > golanci-report.xml
+      - persist_to_workspace:
+          root: ~/repo
+          paths:
+            - golanci-report.xml
   test:
     docker:
       - image: golang:1.20
