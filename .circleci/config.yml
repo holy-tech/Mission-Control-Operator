@@ -14,9 +14,8 @@ jobs:
     steps:
       - checkout
       - run: make ci-lint | tee golanci-report.xml
-      - persist_to_workspace:
-          paths:
-            - golanci-report.xml
+      - store_artifacts:
+          path: golanci-report.xml
   test:
     docker:
       - image: golang:1.20
