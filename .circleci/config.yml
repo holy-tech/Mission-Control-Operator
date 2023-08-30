@@ -13,9 +13,8 @@ jobs:
       - image: golangci/golangci-lint:v1.53
     steps:
       - checkout
-      - run: make ci-lint > golanci-report.xml
+      - run: make ci-lint | tee golanci-report.xml
       - persist_to_workspace:
-          root: /go/src/Mission-Control-Operator
           paths:
             - golanci-report.xml
   test:
