@@ -13,7 +13,7 @@ jobs:
       - image: golangci/golangci-lint:v1.53
     steps:
       - checkout
-      - run: make ci-lint > golanci-report.xml
+      - run: make lint > golanci-report.xml
       - persist_to_workspace:
           root: ~/repo
           paths:
