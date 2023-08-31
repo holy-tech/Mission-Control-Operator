@@ -19,15 +19,14 @@ package controllers
 import (
 	"context"
 
+	missionv1alpha1 "github.com/holy-tech/Mission-Control-Operator/api/v1alpha1"
+	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/types"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
-	"sigs.k8s.io/controller-runtime/pkg/log"
-
-	missionv1alpha1 "github.com/holy-tech/Mission-Control-Operator/api/v1alpha1"
 )
 
-// MissionKeyReconciler reconciles a MissionKey object
 type MissionKeyReconciler struct {
 	client.Client
 	Scheme *runtime.Scheme
@@ -37,26 +36,15 @@ type MissionKeyReconciler struct {
 //+kubebuilder:rbac:groups=mission.mission-control.apis.io,resources=missionkeys/status,verbs=get;update;patch
 //+kubebuilder:rbac:groups=mission.mission-control.apis.io,resources=missionkeys/finalizers,verbs=update
 
-// Reconcile is part of the main kubernetes reconciliation loop which aims to
-// move the current state of the cluster closer to the desired state.
-// TODO(user): Modify the Reconcile function to compare the state specified by
-// the MissionKey object against the actual cluster state, and then
-// perform operations to make the cluster state reflect the state specified by
-// the user.
-//
-// For more details, check Reconcile and its Result here:
-// - https://pkg.go.dev/sigs.k8s.io/controller-runtime@v0.14.4/pkg/reconcile
 func (r *MissionKeyReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
-	_ = log.FromContext(ctx)
-
-	// TODO(user): your logic here
-
+	key := &missionv1alpha1.MissionKey{}
+	err := r.Get(ctx, types.NamespacedName{Name: req.Name}, key)
 	return ctrl.Result{}, nil
 }
 
-// SetupWithManager sets up the controller with the Manager.
 func (r *MissionKeyReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&missionv1alpha1.MissionKey{}).
+		Owns(&corev1.Secret{}).
 		Complete(r)
 }

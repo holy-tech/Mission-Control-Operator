@@ -32,7 +32,6 @@ import (
 
 	ctrl "sigs.k8s.io/controller-runtime"
 	client "sigs.k8s.io/controller-runtime/pkg/client"
-	log "sigs.k8s.io/controller-runtime/pkg/log"
 
 	cpv1 "github.com/crossplane/crossplane/apis/pkg/v1"
 
@@ -58,8 +57,6 @@ var ProviderMapping = map[string]string{
 //+kubebuilder:rbac:groups="",resources=events,verbs=create;patch
 
 func (r *MissionReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
-	_ = log.FromContext(ctx)
-
 	mission := &missionv1alpha1.Mission{}
 	err := r.Get(ctx, types.NamespacedName{Name: req.Name}, mission)
 	if err != nil {
