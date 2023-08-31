@@ -20,7 +20,8 @@ import (
 	"context"
 
 	v1 "k8s.io/api/core/v1"
-	"k8s.io/apimachinery/pkg/api/errors"
+	errors "k8s.io/apimachinery/pkg/api/errors"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	runtime "k8s.io/apimachinery/pkg/runtime"
 	types "k8s.io/apimachinery/pkg/types"
 
@@ -49,11 +50,16 @@ func (r *MissionKeyReconciler) Reconcile(ctx context.Context, req ctrl.Request) 
 	}
 
 	// Check if secret and service account still exists if not create.
-	secret := v1.Secret{}
+	secret := v1.Secret{
+		Data: map[string][]byte{"keyfile": key.Spec.Data},
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      req.Name,
+			Namespace: req.Namespace,
+		},
+	}
 	sa := v1.ServiceAccount{}
-	if err := r.Get(ctx, types.NamespacedName{Name: req.Name}, &secret); err != nil {
+	if err := r.Get(ctx, types.NamespacedName{Name: req.Name, Namespace: req.Namespace}, &secret); err != nil {
 		if errors.IsNotFound(err) {
-			secret.Data["keyfile"] = key.Spec.Data
 			err := r.Create(ctx, &secret)
 			if err != nil {
 				return ctrl.Result{}, err
