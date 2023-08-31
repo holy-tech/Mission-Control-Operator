@@ -20,11 +20,13 @@ import (
 	"context"
 
 	missionv1alpha1 "github.com/holy-tech/Mission-Control-Operator/api/v1alpha1"
+	"github.com/holy-tech/Mission-Control-Operator/controllers/utils"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 )
 
 type MissionKeyReconciler struct {
@@ -39,6 +41,18 @@ type MissionKeyReconciler struct {
 func (r *MissionKeyReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	key := &missionv1alpha1.MissionKey{}
 	err := r.Get(ctx, types.NamespacedName{Name: req.Name}, key)
+	if err != nil {
+		return ctrl.Result{}, err
+	}
+	keyFinalizer := key.Spec.Key
+	if key.ObjectMeta.DeletionTimestamp.IsZero() {
+		if !utils.ContainsString(key.ObjectMeta.Finalizers, keyFinalizer) {
+			key.ObjectMeta.Finalizers = append(key.ObjectMeta.Finalizers, keyFinalizer)
+			if err := r.Update(context.Background(), key); err != nil {
+				return reconcile.Result{}, err
+			}
+		}
+	}
 	return ctrl.Result{}, nil
 }
 
