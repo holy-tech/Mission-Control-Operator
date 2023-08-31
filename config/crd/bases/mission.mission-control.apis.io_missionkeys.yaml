@@ -13,7 +13,7 @@ spec:
     listKind: MissionKeyList
     plural: missionkeys
     singular: missionkey
-  scope: Cluster
+  scope: Namespaced
   versions:
   - name: v1alpha1
     schema:
