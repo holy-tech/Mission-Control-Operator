@@ -31,6 +31,8 @@ type MissionKeyStatus struct {
 
 // +kubebuilder:object:root=true
 // +kubebuilder:subresource:status
+//+kubebuilder:resource:scope=Cluster
+
 type MissionKey struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
