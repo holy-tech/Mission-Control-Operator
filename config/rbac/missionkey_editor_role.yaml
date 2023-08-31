@@ -1,0 +1,31 @@
+# permissions for end users to edit missionkeys.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  labels:
+    app.kubernetes.io/name: clusterrole
+    app.kubernetes.io/instance: missionkey-editor-role
+    app.kubernetes.io/component: rbac
+    app.kubernetes.io/created-by: mission-control-operator
+    app.kubernetes.io/part-of: mission-control-operator
+    app.kubernetes.io/managed-by: kustomize
+  name: missionkey-editor-role
+rules:
+- apiGroups:
+  - mission.mission-control.apis.io
+  resources:
+  - missionkeys
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - mission.mission-control.apis.io
+  resources:
+  - missionkeys/status
+  verbs:
+  - get
