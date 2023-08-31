@@ -44,6 +44,9 @@ func (r *MissionKeyReconciler) Reconcile(ctx context.Context, req ctrl.Request) 
 	if err != nil {
 		return ctrl.Result{}, err
 	}
+
+	// Check if secret still exists if not create (Use client.ObjectKeyFromObject to ensure ownership).
+
 	keyFinalizer := key.Spec.Key
 	if key.ObjectMeta.DeletionTimestamp.IsZero() {
 		if !utils.ContainsString(key.ObjectMeta.Finalizers, keyFinalizer) {
@@ -53,6 +56,16 @@ func (r *MissionKeyReconciler) Reconcile(ctx context.Context, req ctrl.Request) 
 			}
 		}
 	}
+
+	if key.ObjectMeta.DeletionTimestamp != nil {
+		// Delete secret and check for err HERE
+
+		key.ObjectMeta.Finalizers = utils.RemoveString(key.ObjectMeta.Finalizers, keyFinalizer)
+		if err := r.Update(context.Background(), key); err != nil {
+			return reconcile.Result{}, err
+		}
+	}
+
 	return ctrl.Result{}, nil
 }
 
