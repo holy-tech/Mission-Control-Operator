@@ -15,6 +15,32 @@ rules:
 - apiGroups:
   - mission.mission-control.apis.io
   resources:
+  - missionkeys
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - mission.mission-control.apis.io
+  resources:
+  - missionkeys/finalizers
+  verbs:
+  - update
+- apiGroups:
+  - mission.mission-control.apis.io
+  resources:
+  - missionkeys/status
+  verbs:
+  - get
+  - patch
+  - update
+- apiGroups:
+  - mission.mission-control.apis.io
+  resources:
   - missions
   verbs:
   - create
