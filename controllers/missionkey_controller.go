@@ -45,7 +45,17 @@ func (r *MissionKeyReconciler) Reconcile(ctx context.Context, req ctrl.Request) 
 		return ctrl.Result{}, err
 	}
 
-	// Check if secret still exists if not create (Use client.ObjectKeyFromObject to ensure ownership).
+	// Check if secret and service account still exists if not create.
+	secret := corev1.Secret{}
+	sa := corev1.ServiceAccount{}
+	if err := r.Get(ctx, types.NamespacedName{Name: req.Name}, &secret); err != nil {
+		// Create Secret
+		return ctrl.Result{}, err
+	}
+	if err = r.Get(ctx, types.NamespacedName{Name: req.Name}, &sa); err != nil {
+		// Create Service Account
+		return ctrl.Result{}, err
+	}
 
 	keyFinalizer := key.Spec.Key
 	if key.ObjectMeta.DeletionTimestamp.IsZero() {
@@ -56,9 +66,8 @@ func (r *MissionKeyReconciler) Reconcile(ctx context.Context, req ctrl.Request) 
 			}
 		}
 	}
-
 	if key.ObjectMeta.DeletionTimestamp != nil {
-		// Delete secret and check for err HERE
+		// Delete secret and SA and check for err HERE
 
 		key.ObjectMeta.Finalizers = utils.RemoveString(key.ObjectMeta.Finalizers, keyFinalizer)
 		if err := r.Update(context.Background(), key); err != nil {
@@ -73,5 +82,6 @@ func (r *MissionKeyReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&missionv1alpha1.MissionKey{}).
 		Owns(&corev1.Secret{}).
+		Owns(&corev1.ServiceAccount{}).
 		Complete(r)
 }
