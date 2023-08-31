@@ -21,7 +21,9 @@ import (
 )
 
 type MissionKeySpec struct {
-	Key string `json:"key,omitempty"`
+	Name string `json:"name,omitempty"`
+	Type string `json:"type,omitempty"`
+	Data []byte `json:"data,omitempty"`
 }
 
 type MissionKeyStatus struct {

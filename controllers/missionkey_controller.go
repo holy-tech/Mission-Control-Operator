@@ -19,14 +19,17 @@ package controllers
 import (
 	"context"
 
-	missionv1alpha1 "github.com/holy-tech/Mission-Control-Operator/api/v1alpha1"
-	"github.com/holy-tech/Mission-Control-Operator/controllers/utils"
-	corev1 "k8s.io/api/core/v1"
-	"k8s.io/apimachinery/pkg/runtime"
-	"k8s.io/apimachinery/pkg/types"
+	v1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/api/errors"
+	runtime "k8s.io/apimachinery/pkg/runtime"
+	types "k8s.io/apimachinery/pkg/types"
+
 	ctrl "sigs.k8s.io/controller-runtime"
-	"sigs.k8s.io/controller-runtime/pkg/client"
-	"sigs.k8s.io/controller-runtime/pkg/reconcile"
+	client "sigs.k8s.io/controller-runtime/pkg/client"
+	reconcile "sigs.k8s.io/controller-runtime/pkg/reconcile"
+
+	missionv1alpha1 "github.com/holy-tech/Mission-Control-Operator/api/v1alpha1"
+	utils "github.com/holy-tech/Mission-Control-Operator/controllers/utils"
 )
 
 type MissionKeyReconciler struct {
@@ -46,18 +49,29 @@ func (r *MissionKeyReconciler) Reconcile(ctx context.Context, req ctrl.Request) 
 	}
 
 	// Check if secret and service account still exists if not create.
-	secret := corev1.Secret{}
-	sa := corev1.ServiceAccount{}
+	secret := v1.Secret{}
+	sa := v1.ServiceAccount{}
 	if err := r.Get(ctx, types.NamespacedName{Name: req.Name}, &secret); err != nil {
-		// Create Secret
+		if errors.IsNotFound(err) {
+			secret.Data["keyfile"] = key.Spec.Data
+			err := r.Create(ctx, &secret)
+			if err != nil {
+				return ctrl.Result{}, err
+			}
+		}
 		return ctrl.Result{}, err
 	}
 	if err = r.Get(ctx, types.NamespacedName{Name: req.Name}, &sa); err != nil {
-		// Create Service Account
+		if errors.IsNotFound(err) {
+			err := r.Create(ctx, &sa)
+			if err != nil {
+				return ctrl.Result{}, err
+			}
+		}
 		return ctrl.Result{}, err
 	}
 
-	keyFinalizer := key.Spec.Key
+	keyFinalizer := key.Spec.Name
 	if key.ObjectMeta.DeletionTimestamp.IsZero() {
 		if !utils.ContainsString(key.ObjectMeta.Finalizers, keyFinalizer) {
 			key.ObjectMeta.Finalizers = append(key.ObjectMeta.Finalizers, keyFinalizer)
@@ -81,7 +95,7 @@ func (r *MissionKeyReconciler) Reconcile(ctx context.Context, req ctrl.Request) 
 func (r *MissionKeyReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&missionv1alpha1.MissionKey{}).
-		Owns(&corev1.Secret{}).
-		Owns(&corev1.ServiceAccount{}).
+		Owns(&v1.Secret{}).
+		Owns(&v1.ServiceAccount{}).
 		Complete(r)
 }

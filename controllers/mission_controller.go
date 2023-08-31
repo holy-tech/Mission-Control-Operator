@@ -36,7 +36,7 @@ import (
 	cpv1 "github.com/crossplane/crossplane/apis/pkg/v1"
 
 	missionv1alpha1 "github.com/holy-tech/Mission-Control-Operator/api/v1alpha1"
-	"github.com/holy-tech/Mission-Control-Operator/controllers/utils"
+	utils "github.com/holy-tech/Mission-Control-Operator/controllers/utils"
 )
 
 type MissionReconciler struct {
