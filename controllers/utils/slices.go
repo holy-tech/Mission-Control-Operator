@@ -25,3 +25,15 @@ func Contains(s []string, str string) bool {
 
 	return false
 }
+
+func SameList(s1, s2 []string) bool {
+	if len(s1) != len(s2) {
+		return false
+	}
+	for _, v := range s1 {
+		if !Contains(s2, v) {
+			return false
+		}
+	}
+	return true
+}

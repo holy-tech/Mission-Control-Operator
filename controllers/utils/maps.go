@@ -30,3 +30,9 @@ func GetValues(vm map[string]string) []string {
 	sort.Strings(keys)
 	return keys
 }
+
+func HasSameKeys(vm1, vm2 map[string]string) bool {
+	k1 := GetValues(vm1)
+	k2 := GetValues(vm2)
+	return SameList(k1, k2)
+}
