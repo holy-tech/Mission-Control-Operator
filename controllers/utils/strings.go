@@ -16,23 +16,21 @@ limitations under the License.
 
 package utils
 
-import "sort"
-
-type Mapping interface {
-	keys() []string
-}
-
-func GetValues(vm map[string]string) []string {
-	var keys []string
-	for k := range vm {
-		keys = append(keys, k)
+func ContainsString(lists []string, s string) bool {
+	for _, value := range lists {
+		if value == s {
+			return true
+		}
 	}
-	sort.Strings(keys)
-	return keys
+	return false
 }
 
-func HasSameKeys(vm1, vm2 map[string]string) bool {
-	k1 := GetValues(vm1)
-	k2 := GetValues(vm2)
-	return SameList(k1, k2)
+func RemoveString(slice []string, s string) (result []string) {
+	for _, item := range slice {
+		if item == s {
+			continue
+		}
+		result = append(result, item)
+	}
+	return
 }

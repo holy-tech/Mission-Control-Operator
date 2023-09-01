@@ -1,12 +1,15 @@
 resources:
 - bases/mission.mission-control.apis.io_missions.yaml
+- bases/mission.mission-control.apis.io_missionkeys.yaml
 #+kubebuilder:scaffold:crdkustomizeresource
 
 patchesStrategicMerge:
 #- patches/webhook_in_missions.yaml
+#- patches/webhook_in_missionkeys.yaml
 #+kubebuilder:scaffold:crdkustomizewebhookpatch
 
 #- patches/cainjection_in_missions.yaml
+#- patches/cainjection_in_missionkeys.yaml
 #+kubebuilder:scaffold:crdkustomizecainjectionpatch
 
 configurations:

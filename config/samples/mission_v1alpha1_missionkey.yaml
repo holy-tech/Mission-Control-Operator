@@ -1,0 +1,9 @@
+apiVersion: mission.mission-control.apis.io/v1alpha1
+kind: MissionKey
+metadata:
+  name: missionkey-sample
+  namespace: default
+spec:
+  name: gcp-key
+  type: gcp
+  data: ${BASE64_JSON_FILE.key}

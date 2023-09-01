@@ -32,6 +32,7 @@ import (
 	controllerscheme "sigs.k8s.io/controller-runtime/pkg/scheme"
 
 	cpv1 "github.com/crossplane/crossplane/apis/pkg/v1"
+
 	missionv1alpha1 "github.com/holy-tech/Mission-Control-Operator/api/v1alpha1"
 	"github.com/holy-tech/Mission-Control-Operator/controllers"
 	//+kubebuilder:scaffold:imports
@@ -90,6 +91,13 @@ func main() {
 		Recorder: mgr.GetEventRecorderFor("Mission"),
 	}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "Mission")
+		os.Exit(1)
+	}
+	if err = (&controllers.MissionKeyReconciler{
+		Client: mgr.GetClient(),
+		Scheme: mgr.GetScheme(),
+	}).SetupWithManager(mgr); err != nil {
+		setupLog.Error(err, "unable to create controller", "controller", "MissionKey")
 		os.Exit(1)
 	}
 	//+kubebuilder:scaffold:builder

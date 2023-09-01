@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 ### Added
 - Changelog for release announcements.
+- MissionKey CRD for storing cloud provider credentials
 
 ### Changed
 - Fixed CICD linting and added artifacts for outputs.
