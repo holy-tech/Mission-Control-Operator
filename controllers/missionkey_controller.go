@@ -44,7 +44,7 @@ type MissionKeyReconciler struct {
 
 func (r *MissionKeyReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	key := &missionv1alpha1.MissionKey{}
-	err := r.Get(ctx, types.NamespacedName{Name: req.Name}, key)
+	err := r.Get(ctx, types.NamespacedName{Name: req.Name, Namespace: req.Namespace}, key)
 	if err != nil {
 		return ctrl.Result{}, err
 	}
@@ -57,7 +57,12 @@ func (r *MissionKeyReconciler) Reconcile(ctx context.Context, req ctrl.Request) 
 			Namespace: req.Namespace,
 		},
 	}
-	sa := v1.ServiceAccount{}
+	sa := v1.ServiceAccount{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      req.Name,
+			Namespace: req.Namespace,
+		},
+	}
 	if err := r.Get(ctx, types.NamespacedName{Name: req.Name, Namespace: req.Namespace}, &secret); err != nil {
 		if errors.IsNotFound(err) {
 			err := r.Create(ctx, &secret)
@@ -67,7 +72,7 @@ func (r *MissionKeyReconciler) Reconcile(ctx context.Context, req ctrl.Request) 
 		}
 		return ctrl.Result{}, err
 	}
-	if err = r.Get(ctx, types.NamespacedName{Name: req.Name}, &sa); err != nil {
+	if err = r.Get(ctx, types.NamespacedName{Name: req.Name, Namespace: req.Namespace}, &sa); err != nil {
 		if errors.IsNotFound(err) {
 			err := r.Create(ctx, &sa)
 			if err != nil {
