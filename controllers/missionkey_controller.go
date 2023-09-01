@@ -23,7 +23,6 @@ import (
 	errors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	runtime "k8s.io/apimachinery/pkg/runtime"
-	types "k8s.io/apimachinery/pkg/types"
 
 	ctrl "sigs.k8s.io/controller-runtime"
 	client "sigs.k8s.io/controller-runtime/pkg/client"
@@ -44,7 +43,7 @@ type MissionKeyReconciler struct {
 
 func (r *MissionKeyReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	key := &missionv1alpha1.MissionKey{}
-	err := r.Get(ctx, types.NamespacedName{Name: req.Name, Namespace: req.Namespace}, key)
+	err := r.Get(ctx, req.NamespacedName, key)
 	if err != nil {
 		return ctrl.Result{}, err
 	}
@@ -63,21 +62,15 @@ func (r *MissionKeyReconciler) Reconcile(ctx context.Context, req ctrl.Request) 
 			Namespace: req.Namespace,
 		},
 	}
-	if err := r.Get(ctx, types.NamespacedName{Name: req.Name, Namespace: req.Namespace}, &secret); err != nil {
+	if err := r.Get(ctx, req.NamespacedName, &secret); err != nil {
 		if errors.IsNotFound(err) {
-			err := r.Create(ctx, &secret)
-			if err != nil {
-				return ctrl.Result{}, err
-			}
+			return ctrl.Result{}, r.Create(ctx, &secret)
 		}
 		return ctrl.Result{}, err
 	}
-	if err = r.Get(ctx, types.NamespacedName{Name: req.Name, Namespace: req.Namespace}, &sa); err != nil {
+	if err = r.Get(ctx, req.NamespacedName, &sa); err != nil {
 		if errors.IsNotFound(err) {
-			err := r.Create(ctx, &sa)
-			if err != nil {
-				return ctrl.Result{}, err
-			}
+			return ctrl.Result{}, r.Create(ctx, &sa)
 		}
 		return ctrl.Result{}, err
 	}
