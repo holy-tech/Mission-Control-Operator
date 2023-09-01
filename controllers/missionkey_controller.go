@@ -74,6 +74,9 @@ func (r *MissionKeyReconciler) Reconcile(ctx context.Context, req ctrl.Request) 
 			return ctrl.Result{}, r.Create(ctx, &secret)
 		}
 		return ctrl.Result{}, err
+	} else if string(key.Spec.Data) != string(secret.Data["keyfile"]) {
+		secret.Data["keyfile"] = key.Spec.Data
+		return ctrl.Result{}, r.Update(ctx, &secret)
 	}
 	if err = r.Get(ctx, req.NamespacedName, &sa); err != nil {
 		if errors.IsNotFound(err) {
