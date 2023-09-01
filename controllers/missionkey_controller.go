@@ -26,6 +26,7 @@ import (
 
 	ctrl "sigs.k8s.io/controller-runtime"
 	client "sigs.k8s.io/controller-runtime/pkg/client"
+	controllerutil "sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 	reconcile "sigs.k8s.io/controller-runtime/pkg/reconcile"
 
 	missionv1alpha1 "github.com/holy-tech/Mission-Control-Operator/api/v1alpha1"
@@ -61,6 +62,12 @@ func (r *MissionKeyReconciler) Reconcile(ctx context.Context, req ctrl.Request) 
 			Name:      req.Name,
 			Namespace: req.Namespace,
 		},
+	}
+	if err := controllerutil.SetControllerReference(key, &secret, r.Scheme); err != nil {
+		return ctrl.Result{}, err
+	}
+	if err := controllerutil.SetControllerReference(key, &sa, r.Scheme); err != nil {
+		return ctrl.Result{}, err
 	}
 	if err := r.Get(ctx, req.NamespacedName, &secret); err != nil {
 		if errors.IsNotFound(err) {
