@@ -20,12 +20,22 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
+type CredentialConfig struct {
+	Name      string `json:"name,omitempty"`
+	Namespace string `json:"namespace,omitempty"`
+}
+
+type PackageConfig struct {
+	ProjectID   string           `json:"project_id,omitempty"`
+	Credentials CredentialConfig `json:"credentials,omitempty"`
+}
+
 type MissionPackageStatus struct {
 	Installed string `json:"installed,omitempty"`
 }
 
 type MissionSpec struct {
-	Packages []string `json:"packages,omitempty"`
+	Packages map[string]PackageConfig `json:"packages,omitempty"`
 }
 
 type MissionStatus struct {
