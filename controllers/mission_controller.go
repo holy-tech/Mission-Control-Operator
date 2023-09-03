@@ -71,7 +71,7 @@ func (r *MissionReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ct
 
 	// Check that the packages being used in specified mission are installed in the cluster and are supported
 	for _, p := range mission.Spec.Packages {
-		err := r.ConfirmProvider(ctx, mission, p)
+		err := r.ConfirmProvider(ctx, mission, p.Provider)
 		if err != nil {
 			return ctrl.Result{}, err
 		}

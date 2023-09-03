@@ -26,6 +26,7 @@ type CredentialConfig struct {
 }
 
 type PackageConfig struct {
+	Provider    string           `json:"provider,omitempty"`
 	ProjectID   string           `json:"project_id,omitempty"`
 	Credentials CredentialConfig `json:"credentials,omitempty"`
 }
@@ -35,7 +36,7 @@ type MissionPackageStatus struct {
 }
 
 type MissionSpec struct {
-	Packages map[string]PackageConfig `json:"packages,omitempty"`
+	Packages []PackageConfig `json:"packages,omitempty"`
 }
 
 type MissionStatus struct {
