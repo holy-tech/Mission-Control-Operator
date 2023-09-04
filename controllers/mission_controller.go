@@ -33,6 +33,7 @@ import (
 	ctrl "sigs.k8s.io/controller-runtime"
 	client "sigs.k8s.io/controller-runtime/pkg/client"
 
+	xpv1 "github.com/crossplane/crossplane-runtime/apis/common/v1"
 	cpv1 "github.com/crossplane/crossplane/apis/pkg/v1"
 	gcpv1 "github.com/upbound/provider-gcp/apis/v1beta1"
 
@@ -92,6 +93,8 @@ func (r *MissionReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ct
 		return ctrl.Result{}, err
 	}
 
+	r.Recorder.Event(mission, "Normal", "Success", "ProviderConfig created")
+
 	return ctrl.Result{}, nil
 }
 
@@ -144,8 +147,27 @@ func (r *MissionReconciler) ReconcilePackageStatus(ctx context.Context, mission 
 }
 
 func (r *MissionReconciler) ReconcileProviderConfig(ctx context.Context, mission *missionv1alpha1.Mission) error {
-	providerConfig := &gcpv1.ProviderConfig{}
-	if providerConfig != nil {
+	providerConfig := &gcpv1.ProviderConfig{
+		ObjectMeta: v1.ObjectMeta{
+			Name: "testing config",
+		},
+		Spec: gcpv1.ProviderConfigSpec{
+			ProjectID: "testing id",
+			Credentials: gcpv1.ProviderCredentials{
+				Source: xpv1.CredentialsSourceSecret,
+				CommonCredentialSelectors: xpv1.CommonCredentialSelectors{
+					SecretRef: &xpv1.SecretKeySelector{
+						Key: "testing key",
+						SecretReference: xpv1.SecretReference{
+							Name:      "testing name",
+							Namespace: "testing ns",
+						},
+					},
+				},
+			},
+		},
+	}
+	if providerConfig == nil {
 		return errors.New("Error here")
 	}
 	return nil
