@@ -23,6 +23,7 @@ import (
 type CredentialConfig struct {
 	Name      string `json:"name,omitempty"`
 	Namespace string `json:"namespace,omitempty"`
+	Key       string `json:"key,omitempty"`
 }
 
 type PackageConfig struct {

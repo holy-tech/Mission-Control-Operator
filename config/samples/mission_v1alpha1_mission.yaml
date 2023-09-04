@@ -7,5 +7,6 @@ spec:
     - provider: GCP
       project_id: <PROJECT_ID>
       credentials:
-        namespace: <MISSION_KEY_NS>
         name: <MISSION_KEY_NAME>
+        namespace: <MISSION_KEY_NS>
+        key: <MISSION_KEY>
