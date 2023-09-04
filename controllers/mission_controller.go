@@ -24,6 +24,7 @@ import (
 
 	apiextensionsv1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
 	apiextensionsclientset "k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset"
+	k8serrors "k8s.io/apimachinery/pkg/api/errors"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	runtime "k8s.io/apimachinery/pkg/runtime"
 	types "k8s.io/apimachinery/pkg/types"
@@ -60,7 +61,7 @@ var ProviderMapping = map[string]string{
 
 func (r *MissionReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	mission := &missionv1alpha1.Mission{}
-	err := r.Get(ctx, types.NamespacedName{Name: req.Name}, mission)
+	err := r.Get(ctx, req.NamespacedName, mission)
 	if err != nil {
 		return ctrl.Result{}, err
 	}
@@ -167,10 +168,12 @@ func (r *MissionReconciler) ReconcileProviderConfig(ctx context.Context, mission
 			},
 		},
 	}
-	if providerConfig == nil {
-		return errors.New("Error here")
+	if err := r.Get(ctx, types.NamespacedName{Name: mission.Name + "-GCP"}, providerConfig); err != nil {
+		if k8serrors.IsNotFound(err) {
+			return r.Create(ctx, providerConfig)
+		}
 	}
-	return nil
+	return r.Update(ctx, providerConfig)
 }
 
 func (r *MissionReconciler) SetupWithManager(mgr ctrl.Manager) error {
