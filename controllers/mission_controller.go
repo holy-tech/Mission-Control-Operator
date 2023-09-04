@@ -34,6 +34,7 @@ import (
 	client "sigs.k8s.io/controller-runtime/pkg/client"
 
 	cpv1 "github.com/crossplane/crossplane/apis/pkg/v1"
+	gcpv1 "github.com/upbound/provider-gcp/apis/v1beta1"
 
 	missionv1alpha1 "github.com/holy-tech/Mission-Control-Operator/api/v1alpha1"
 	utils "github.com/holy-tech/Mission-Control-Operator/controllers/utils"
@@ -83,6 +84,14 @@ func (r *MissionReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ct
 	}
 
 	r.Recorder.Event(mission, "Normal", "Success", "Mission correctly connected to Crossplane")
+
+	// Create ProviderConfig that resources will reference.
+	err = r.ReconcileProviderConfig(ctx, mission)
+	if err != nil {
+		r.Recorder.Event(mission, "Warning", "ProviderConfig not created", "Could not correctly create ProviderConfig resource.")
+		return ctrl.Result{}, err
+	}
+
 	return ctrl.Result{}, nil
 }
 
@@ -107,6 +116,19 @@ func (r *MissionReconciler) ConfirmProvider(ctx context.Context, mission *missio
 	return nil
 }
 
+func (r *MissionReconciler) GetProvider(ctx context.Context, providerName string) (*cpv1.Provider, error) {
+	p := &cpv1.Provider{}
+	err := r.Get(ctx, types.NamespacedName{Name: providerName}, p)
+	return p, err
+}
+
+func (r *MissionReconciler) ConfirmCRD(ctx context.Context, crdNameVersion string) (*apiextensionsv1.CustomResourceDefinition, error) {
+	clientConfig, _ := clientcmd.BuildConfigFromFlags("", os.Getenv("HOME")+"/.kube/config")
+	clientset, _ := apiextensionsclientset.NewForConfig(clientConfig)
+	crd, err := clientset.ApiextensionsV1().CustomResourceDefinitions().Get(ctx, crdNameVersion, v1.GetOptions{})
+	return crd, err
+}
+
 func (r *MissionReconciler) ReconcilePackageStatus(ctx context.Context, mission *missionv1alpha1.Mission, provider *cpv1.Provider) error {
 	if mission.Status.PackageStatus == nil {
 		mission.Status.PackageStatus = map[string]missionv1alpha1.MissionPackageStatus{}
@@ -121,17 +143,12 @@ func (r *MissionReconciler) ReconcilePackageStatus(ctx context.Context, mission 
 	return r.Status().Update(ctx, mission)
 }
 
-func (r *MissionReconciler) GetProvider(ctx context.Context, providerName string) (*cpv1.Provider, error) {
-	p := &cpv1.Provider{}
-	err := r.Get(ctx, types.NamespacedName{Name: providerName}, p)
-	return p, err
-}
-
-func (r *MissionReconciler) ConfirmCRD(ctx context.Context, crdNameVersion string) (*apiextensionsv1.CustomResourceDefinition, error) {
-	clientConfig, _ := clientcmd.BuildConfigFromFlags("", os.Getenv("HOME")+"/.kube/config")
-	clientset, _ := apiextensionsclientset.NewForConfig(clientConfig)
-	crd, err := clientset.ApiextensionsV1().CustomResourceDefinitions().Get(ctx, crdNameVersion, v1.GetOptions{})
-	return crd, err
+func (r *MissionReconciler) ReconcileProviderConfig(ctx context.Context, mission *missionv1alpha1.Mission) error {
+	providerConfig := &gcpv1.ProviderConfig{}
+	if providerConfig != nil {
+		return errors.New("Error here")
+	}
+	return nil
 }
 
 func (r *MissionReconciler) SetupWithManager(mgr ctrl.Manager) error {
