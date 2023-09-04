@@ -21,6 +21,8 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"reflect"
+	"strings"
 
 	apiextensionsv1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
 	apiextensionsclientset "k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset"
@@ -33,6 +35,7 @@ import (
 
 	ctrl "sigs.k8s.io/controller-runtime"
 	client "sigs.k8s.io/controller-runtime/pkg/client"
+	controllerutil "sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 
 	xpv1 "github.com/crossplane/crossplane-runtime/apis/common/v1"
 	cpv1 "github.com/crossplane/crossplane/apis/pkg/v1"
@@ -88,12 +91,13 @@ func (r *MissionReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ct
 	r.Recorder.Event(mission, "Normal", "Success", "Mission correctly connected to Crossplane")
 
 	// Create ProviderConfig that resources will reference.
-	err = r.ReconcileProviderConfig(ctx, mission)
-	if err != nil {
-		r.Recorder.Event(mission, "Warning", "ProviderConfig not created", "Could not correctly create ProviderConfig resource.")
-		return ctrl.Result{}, err
+	for _, pkg := range mission.Spec.Packages {
+		err = r.ReconcileProviderConfig(ctx, &pkg, mission)
+		if err != nil {
+			r.Recorder.Event(mission, "Warning", "ProviderConfig not created", "Could not correctly create ProviderConfig resource.")
+			return ctrl.Result{}, err
+		}
 	}
-
 	r.Recorder.Event(mission, "Normal", "Success", "ProviderConfig created")
 
 	return ctrl.Result{}, nil
@@ -147,37 +151,45 @@ func (r *MissionReconciler) ReconcilePackageStatus(ctx context.Context, mission 
 	return r.Status().Update(ctx, mission)
 }
 
-func (r *MissionReconciler) ReconcileProviderConfig(ctx context.Context, mission *missionv1alpha1.Mission) error {
-	providerConfig := &gcpv1.ProviderConfig{
+func (r *MissionReconciler) ReconcileProviderConfig(ctx context.Context, pkg *missionv1alpha1.PackageConfig, mission *missionv1alpha1.Mission) error {
+	providerName := mission.Name + "-" + strings.ToLower(pkg.Provider)
+	providerConfig := &gcpv1.ProviderConfig{}
+	expectedProviderConfig := &gcpv1.ProviderConfig{
 		ObjectMeta: v1.ObjectMeta{
-			Name: "testing config",
+			Name: providerName,
 		},
 		Spec: gcpv1.ProviderConfigSpec{
-			ProjectID: "testing id",
+			ProjectID: pkg.ProjectID,
 			Credentials: gcpv1.ProviderCredentials{
 				Source: xpv1.CredentialsSourceSecret,
 				CommonCredentialSelectors: xpv1.CommonCredentialSelectors{
 					SecretRef: &xpv1.SecretKeySelector{
-						Key: "testing key",
+						Key: pkg.Credentials.Key,
 						SecretReference: xpv1.SecretReference{
-							Name:      "testing name",
-							Namespace: "testing ns",
+							Name:      pkg.Credentials.Name,
+							Namespace: pkg.Credentials.Namespace,
 						},
 					},
 				},
 			},
 		},
 	}
-	if err := r.Get(ctx, types.NamespacedName{Name: mission.Name + "-GCP"}, providerConfig); err != nil {
+	controllerutil.SetControllerReference(mission, expectedProviderConfig, r.Scheme)
+	if err := r.Get(ctx, types.NamespacedName{Name: providerName}, providerConfig); err != nil {
 		if k8serrors.IsNotFound(err) {
-			return r.Create(ctx, providerConfig)
+			return r.Create(ctx, expectedProviderConfig)
 		}
+	} else if !reflect.DeepEqual(providerConfig, expectedProviderConfig) {
+		providerConfig.Spec = expectedProviderConfig.Spec
+		err := r.Update(ctx, providerConfig)
+		return err
 	}
-	return r.Update(ctx, providerConfig)
+	return nil
 }
 
 func (r *MissionReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&missionv1alpha1.Mission{}).
+		Owns(&gcpv1.ProviderConfig{}).
 		Complete(r)
 }
