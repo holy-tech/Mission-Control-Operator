@@ -35,7 +35,19 @@ spec:
             properties:
               packages:
                 items:
-                  type: string
+                  properties:
+                    credentials:
+                      properties:
+                        name:
+                          type: string
+                        namespace:
+                          type: string
+                      type: object
+                    project_id:
+                      type: string
+                    provider:
+                      type: string
+                  type: object
                 type: array
             type: object
           status:

@@ -193,7 +193,7 @@ func (in *MissionSpec) DeepCopyInto(out *MissionSpec) {
 	*out = *in
 	if in.Packages != nil {
 		in, out := &in.Packages, &out.Packages
-		*out = make([]string, len(*in))
+		*out = make([]PackageConfig, len(*in))
 		copy(*out, *in)
 	}
 }

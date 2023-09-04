@@ -3,4 +3,10 @@ kind: Mission
 metadata:
   name: mission-sample
 spec:
-  packages: ["GCP"]
+  packages:
+    - provider: GCP
+      project_id: <PROJECT_ID>
+      credentials:
+        name: <MISSION_KEY_NAME>
+        namespace: <MISSION_KEY_NS>
+        key: <MISSION_KEY>
