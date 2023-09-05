@@ -100,6 +100,18 @@ func (r *MissionReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ct
 	}
 	r.Recorder.Event(mission, "Normal", "Success", "ProviderConfig created")
 
+	// Confirm that mission key exists, if not create warning.
+	for _, pkg := range mission.Spec.Packages {
+		key := &missionv1alpha1.MissionKey{}
+		err := r.Get(ctx, types.NamespacedName{Name: pkg.Credentials.Name, Namespace: pkg.Credentials.Namespace}, key)
+		if err != nil {
+			if !k8serrors.IsNotFound(err) {
+				r.Recorder.Event(mission, "Warning", "Error looking for MissionKey", "Unexpected error while looking for MissionKey.")
+				return ctrl.Result{}, err
+			}
+			r.Recorder.Event(mission, "Warning", "MissionKey not found", "Please ensure that MissionKey exists in specified namespace.")
+		}
+	}
 	return ctrl.Result{}, nil
 }
 
