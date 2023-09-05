@@ -109,7 +109,8 @@ func (r *MissionReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ct
 				r.Recorder.Event(mission, "Warning", "Error looking for MissionKey", "Unexpected error while looking for MissionKey.")
 				return ctrl.Result{}, err
 			}
-			r.Recorder.Event(mission, "Warning", "MissionKey not found", "Please ensure that MissionKey exists in specified namespace.")
+			message := fmt.Sprintf("Provider %s: Please ensure that MissionKey \"%s\" exists in namespace \"%s\".", pkg.Provider, pkg.Credentials.Name, pkg.Credentials.Namespace)
+			r.Recorder.Event(mission, "Warning", "MissionKey not found", message)
 		} else {
 			r.Recorder.Event(mission, "Normal", "Success", "MissionKey correctly linked.")
 		}
