@@ -98,7 +98,7 @@ func (r *MissionReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ct
 			return ctrl.Result{}, err
 		}
 	}
-	r.Recorder.Event(mission, "Normal", "Success", "ProviderConfig created")
+	r.Recorder.Event(mission, "Normal", "Success", "ProviderConfig correctly created")
 
 	// Confirm that mission key exists, if not create warning.
 	for _, pkg := range mission.Spec.Packages {
@@ -110,6 +110,8 @@ func (r *MissionReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ct
 				return ctrl.Result{}, err
 			}
 			r.Recorder.Event(mission, "Warning", "MissionKey not found", "Please ensure that MissionKey exists in specified namespace.")
+		} else {
+			r.Recorder.Event(mission, "Normal", "Success", "MissionKey correctly linked.")
 		}
 	}
 	return ctrl.Result{}, nil
