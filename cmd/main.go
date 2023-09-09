@@ -35,7 +35,7 @@ import (
 	gcpv1 "github.com/upbound/provider-gcp/apis/v1beta1"
 
 	missionv1alpha1 "github.com/holy-tech/Mission-Control-Operator/api/v1alpha1"
-	"github.com/holy-tech/Mission-Control-Operator/controllers"
+	controllers "github.com/holy-tech/Mission-Control-Operator/internal/controller"
 	//+kubebuilder:scaffold:imports
 )
 

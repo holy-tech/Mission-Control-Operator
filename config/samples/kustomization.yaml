@@ -1,0 +1,5 @@
+## Append samples of your project ##
+resources:
+- mission_v1alpha1_mission.yaml
+- mission_v1alpha1_missionkey.yaml
+#+kubebuilder:scaffold:manifestskustomizesamples

@@ -5,8 +5,9 @@
 *.dll
 *.so
 *.dylib
-bin
+bin/*
 testbin/*
+Dockerfile.cross
 
 # Test binary, build with `go test -c`
 *.test
@@ -20,6 +21,7 @@ testbin/*
 
 # editor and IDE paraphernalia
 .idea
+.vscode
 *.swp
 *.swo
 *~
