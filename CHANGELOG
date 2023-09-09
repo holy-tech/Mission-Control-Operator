@@ -16,7 +16,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Mission CRD specifications to better follow crossplane native ProviderConfig.
 - Added events to facilitate debugging.
 - Updated kubebuilder layout to v4
-- Updated docker image to 1.20
+- Updated docker image to 1.21
 
 ## [0.1.0] - 08-29-2023
 ### Added
