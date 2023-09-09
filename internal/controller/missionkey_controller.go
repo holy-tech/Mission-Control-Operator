@@ -31,7 +31,7 @@ import (
 	reconcile "sigs.k8s.io/controller-runtime/pkg/reconcile"
 
 	missionv1alpha1 "github.com/holy-tech/Mission-Control-Operator/api/v1alpha1"
-	utils "github.com/holy-tech/Mission-Control-Operator/controllers/utils"
+	utils "github.com/holy-tech/Mission-Control-Operator/internal/controller/utils"
 )
 
 type MissionKeyReconciler struct {
