@@ -34,8 +34,8 @@ import (
 	cpv1 "github.com/crossplane/crossplane/apis/pkg/v1"
 	gcpv1 "github.com/upbound/provider-gcp/apis/v1beta1"
 
-	missionv1alpha1 "github.com/holy-tech/Mission-Control-Operator/api/v1alpha1"
-	controllers "github.com/holy-tech/Mission-Control-Operator/internal/controller"
+	missionv1alpha1 "github.com/holy-tech/Mission-Control-Operator/api/mission/v1alpha1"
+	controllers "github.com/holy-tech/Mission-Control-Operator/internal/controller/mission"
 	//+kubebuilder:scaffold:imports
 )
 

@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package controller
+package missioncontroller
 
 import (
 	"context"
@@ -30,7 +30,7 @@ import (
 	controllerutil "sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 	reconcile "sigs.k8s.io/controller-runtime/pkg/reconcile"
 
-	missionv1alpha1 "github.com/holy-tech/Mission-Control-Operator/api/v1alpha1"
+	missionv1alpha1 "github.com/holy-tech/Mission-Control-Operator/api/mission/v1alpha1"
 	utils "github.com/holy-tech/Mission-Control-Operator/internal/controller/utils"
 )
 
