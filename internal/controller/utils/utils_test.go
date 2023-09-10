@@ -35,3 +35,22 @@ func TestGetValues(t *testing.T) {
 		t.Fail()
 	}
 }
+
+func TestHasSameKeys(t *testing.T) {
+	result := HasSameKeys(map[string]string{"a": "A"}, map[string]string{"a": "A"})
+	if !result {
+		t.Fail()
+	}
+	result = HasSameKeys(map[string]string{}, map[string]string{"a": "A"})
+	if result {
+		t.Fail()
+	}
+	result = HasSameKeys(map[string]string{}, map[string]string{})
+	if !result {
+		t.Fail()
+	}
+	result = HasSameKeys(map[string]string{"a": "A"}, map[string]string{"b": "B"})
+	if result {
+		t.Fail()
+	}
+}
