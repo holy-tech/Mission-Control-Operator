@@ -7,10 +7,10 @@ jobs:
     working_directory: /go/src/Mission-Control-Operator
     steps:
       - checkout
-      - run: go install github.com/holy-tech/Mission-Control-Operator
+      - run: go build -v ./...
   lint:
     docker:
-      - image: golangci/golangci-lint:v1.53
+      - image: golangci/golangci-lint:v1.54.1
     steps:
       - checkout
       - run: make ci-lint | tee golanci-report.xml
