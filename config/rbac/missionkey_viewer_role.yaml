@@ -1,20 +1,20 @@
-# permissions for end users to view missions.
+# permissions for end users to view missionkeys.
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
   labels:
     app.kubernetes.io/name: clusterrole
-    app.kubernetes.io/instance: mission-viewer-role
+    app.kubernetes.io/instance: missionkey-viewer-role
     app.kubernetes.io/component: rbac
     app.kubernetes.io/created-by: mission-control-operator
     app.kubernetes.io/part-of: mission-control-operator
     app.kubernetes.io/managed-by: kustomize
-  name: mission-viewer-role
+  name: missionkey-viewer-role
 rules:
 - apiGroups:
   - mission.mission-control.apis.io
   resources:
-  - missions
+  - missionkeys
   verbs:
   - get
   - list
@@ -22,6 +22,6 @@ rules:
 - apiGroups:
   - mission.mission-control.apis.io
   resources:
-  - missions/status
+  - missionkeys/status
   verbs:
   - get

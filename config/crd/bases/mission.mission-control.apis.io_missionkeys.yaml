@@ -4,15 +4,15 @@ kind: CustomResourceDefinition
 metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.12.0
-  name: missions.mission.mission-control.apis.io
+  name: missionkeys.mission.mission-control.apis.io
 spec:
   group: mission.mission-control.apis.io
   names:
-    kind: Mission
-    listKind: MissionList
-    plural: missions
-    singular: mission
-  scope: Cluster
+    kind: MissionKey
+    listKind: MissionKeyList
+    plural: missionkeys
+    singular: missionkey
+  scope: Namespaced
   versions:
   - name: v1alpha1
     schema:
@@ -32,34 +32,15 @@ spec:
             type: object
           spec:
             properties:
-              packages:
-                items:
-                  properties:
-                    credentials:
-                      properties:
-                        key:
-                          type: string
-                        name:
-                          type: string
-                        namespace:
-                          type: string
-                      type: object
-                    project_id:
-                      type: string
-                    provider:
-                      type: string
-                  type: object
-                type: array
+              data:
+                format: byte
+                type: string
+              name:
+                type: string
+              type:
+                type: string
             type: object
           status:
-            properties:
-              package_status:
-                additionalProperties:
-                  properties:
-                    installed:
-                      type: string
-                  type: object
-                type: object
             type: object
         type: object
     served: true
