@@ -5,6 +5,7 @@
 domain: mission-control.apis.io
 layout:
 - go.kubebuilder.io/v4
+multigroup: true
 projectName: mission-control-operator
 repo: github.com/holy-tech/Mission-Control-Operator
 resources:
