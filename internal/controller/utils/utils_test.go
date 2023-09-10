@@ -16,6 +16,22 @@ limitations under the License.
 
 package utils
 
-func GetSupportedProviders() []string {
-	return []string{"GCP"}
+import (
+	"reflect"
+	"testing"
+)
+
+func TestGetValues(t *testing.T) {
+	result := GetValues(map[string]string{"a": "A"})
+	if !reflect.DeepEqual(result, []string{"a"}) {
+		t.Fail()
+	}
+	result = GetValues(map[string]string{})
+	if len(result) != 0 {
+		t.Fail()
+	}
+	result = GetValues(map[string]string{"a": "B", "b": "C"})
+	if !reflect.DeepEqual(result, []string{"a", "b"}) {
+		t.Fail()
+	}
 }
