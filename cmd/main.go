@@ -35,7 +35,7 @@ import (
 	gcpv1 "github.com/upbound/provider-gcp/apis/v1beta1"
 
 	missionv1alpha1 "github.com/holy-tech/Mission-Control-Operator/api/mission/v1alpha1"
-	controllers "github.com/holy-tech/Mission-Control-Operator/internal/controller/mission"
+	missioncontroler "github.com/holy-tech/Mission-Control-Operator/internal/controller/mission"
 	//+kubebuilder:scaffold:imports
 )
 
@@ -89,7 +89,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	if err = (&controllers.MissionReconciler{
+	if err = (&missioncontroler.MissionReconciler{
 		Client:   mgr.GetClient(),
 		Scheme:   mgr.GetScheme(),
 		Recorder: mgr.GetEventRecorderFor("Mission"),
@@ -97,7 +97,7 @@ func main() {
 		setupLog.Error(err, "unable to create controller", "controller", "Mission")
 		os.Exit(1)
 	}
-	if err = (&controllers.MissionKeyReconciler{
+	if err = (&missioncontroler.MissionKeyReconciler{
 		Client: mgr.GetClient(),
 		Scheme: mgr.GetScheme(),
 	}).SetupWithManager(mgr); err != nil {
