@@ -34,7 +34,9 @@ import (
 	cpv1 "github.com/crossplane/crossplane/apis/pkg/v1"
 	gcpv1 "github.com/upbound/provider-gcp/apis/v1beta1"
 
+	computev1alpha1 "github.com/holy-tech/Mission-Control-Operator/api/compute/v1alpha1"
 	missionv1alpha1 "github.com/holy-tech/Mission-Control-Operator/api/mission/v1alpha1"
+	computecontroller "github.com/holy-tech/Mission-Control-Operator/internal/controller/compute"
 	missioncontroler "github.com/holy-tech/Mission-Control-Operator/internal/controller/mission"
 	//+kubebuilder:scaffold:imports
 )
@@ -58,6 +60,7 @@ func init() {
 	if err := gcpSchemeBuilder.AddToScheme(scheme); err != nil {
 		os.Exit(1)
 	}
+	utilruntime.Must(computev1alpha1.AddToScheme(scheme))
 	//+kubebuilder:scaffold:scheme
 }
 
@@ -102,6 +105,13 @@ func main() {
 		Scheme: mgr.GetScheme(),
 	}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "MissionKey")
+		os.Exit(1)
+	}
+	if err = (&computecontroller.VirtualMachineReconciler{
+		Client: mgr.GetClient(),
+		Scheme: mgr.GetScheme(),
+	}).SetupWithManager(mgr); err != nil {
+		setupLog.Error(err, "unable to create controller", "controller", "VirtualMachine")
 		os.Exit(1)
 	}
 	//+kubebuilder:scaffold:builder

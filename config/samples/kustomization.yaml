@@ -2,4 +2,5 @@
 resources:
 - mission_v1alpha1_mission.yaml
 - mission_v1alpha1_missionkey.yaml
+- compute_v1alpha1_virtualmachine.yaml
 #+kubebuilder:scaffold:manifestskustomizesamples
