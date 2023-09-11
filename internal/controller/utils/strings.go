@@ -16,15 +16,6 @@ limitations under the License.
 
 package utils
 
-func ContainsString(lists []string, s string) bool {
-	for _, value := range lists {
-		if value == s {
-			return true
-		}
-	}
-	return false
-}
-
 func RemoveString(slice []string, s string) (result []string) {
 	for _, item := range slice {
 		if item == s {
