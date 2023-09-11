@@ -32,15 +32,17 @@ spec:
           metadata:
             type: object
           spec:
-            description: VirtualMachineSpec defines the desired state of VirtualMachine
             properties:
-              foo:
-                description: Foo is an example field of VirtualMachine. Edit virtualmachine_types.go
-                  to remove/update
+              location:
+                type: string
+              machineType:
+                type: string
+              missionRef:
+                type: string
+              name:
                 type: string
             type: object
           status:
-            description: VirtualMachineStatus defines the observed state of VirtualMachine
             type: object
         type: object
     served: true
