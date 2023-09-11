@@ -54,3 +54,26 @@ func TestHasSameKeys(t *testing.T) {
 		t.Fail()
 	}
 }
+
+func TestContains(t *testing.T) {
+	result := Contains([]string{"a", "b", "c"}, "a")
+	if !result {
+		t.Fail()
+	}
+	result = Contains([]string{"a", "b", "c"}, "c")
+	if !result {
+		t.Fail()
+	}
+	result = Contains([]string{"a", "b", "c"}, "d")
+	if result {
+		t.Fail()
+	}
+	result = Contains([]string{"a", "a"}, "a")
+	if !result {
+		t.Fail()
+	}
+	result = Contains([]string{}, "a")
+	if result {
+		t.Fail()
+	}
+}
