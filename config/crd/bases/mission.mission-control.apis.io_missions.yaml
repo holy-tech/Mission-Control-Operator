@@ -14,7 +14,7 @@ spec:
     singular: mission
   scope: Cluster
   versions:
-  - name: missionv1alpha1
+  - name: v1alpha1
     schema:
       openAPIV3Schema:
         properties:

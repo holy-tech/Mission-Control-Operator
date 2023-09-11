@@ -16,7 +16,7 @@ limitations under the License.
 
 // +kubebuilder:object:generate=true
 // +groupName=mission.mission-control.apis.io
-package missionv1alpha1
+package v1alpha1
 
 import (
 	"k8s.io/apimachinery/pkg/runtime/schema"

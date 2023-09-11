@@ -12,6 +12,32 @@ rules:
   - create
   - patch
 - apiGroups:
+  - compute.mission-control.apis.io
+  resources:
+  - virtualmachines
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - compute.mission-control.apis.io
+  resources:
+  - virtualmachines/finalizers
+  verbs:
+  - update
+- apiGroups:
+  - compute.mission-control.apis.io
+  resources:
+  - virtualmachines/status
+  verbs:
+  - get
+  - patch
+  - update
+- apiGroups:
   - mission.mission-control.apis.io
   resources:
   - missionkeys

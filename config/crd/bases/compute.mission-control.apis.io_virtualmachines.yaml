@@ -4,19 +4,20 @@ kind: CustomResourceDefinition
 metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.12.0
-  name: missionkeys.mission.mission-control.apis.io
+  name: virtualmachines.compute.mission-control.apis.io
 spec:
-  group: mission.mission-control.apis.io
+  group: compute.mission-control.apis.io
   names:
-    kind: MissionKey
-    listKind: MissionKeyList
-    plural: missionkeys
-    singular: missionkey
+    kind: VirtualMachine
+    listKind: VirtualMachineList
+    plural: virtualmachines
+    singular: virtualmachine
   scope: Namespaced
   versions:
   - name: v1alpha1
     schema:
       openAPIV3Schema:
+        description: VirtualMachine is the Schema for the virtualmachines API
         properties:
           apiVersion:
             description: 'APIVersion defines the versioned schema of this representation
@@ -31,16 +32,15 @@ spec:
           metadata:
             type: object
           spec:
+            description: VirtualMachineSpec defines the desired state of VirtualMachine
             properties:
-              data:
-                format: byte
-                type: string
-              name:
-                type: string
-              type:
+              foo:
+                description: Foo is an example field of VirtualMachine. Edit virtualmachine_types.go
+                  to remove/update
                 type: string
             type: object
           status:
+            description: VirtualMachineStatus defines the observed state of VirtualMachine
             type: object
         type: object
     served: true
