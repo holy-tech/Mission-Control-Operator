@@ -77,7 +77,7 @@ func (r *MissionReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ct
 
 	// Check that the providers being used in specified mission are installed in the cluster and are supported
 	for _, p := range mission.Spec.Packages {
-		if !utils.ContainsString(utils.GetSupportedProviders(), p.Provider) {
+		if !utils.Contains(utils.GetSupportedProviders(), p.Provider) {
 			message := fmt.Sprintf("Provider %s is not supported, please use one of %v", p.Provider, utils.GetSupportedProviders())
 			err := errors.New(message)
 			return ctrl.Result{}, err
