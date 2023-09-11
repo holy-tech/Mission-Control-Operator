@@ -77,3 +77,26 @@ func TestContains(t *testing.T) {
 		t.Fail()
 	}
 }
+
+func TestSameList(t *testing.T) {
+	result := SameList([]string{"a", "b", "c"}, []string{"a", "b", "c"})
+	if !result {
+		t.Fail()
+	}
+	result = SameList([]string{"a", "b", "c"}, []string{"c", "b", "a"})
+	if !result {
+		t.Fail()
+	}
+	result = SameList([]string{"a", "b", "c"}, []string{"a", "a", "b", "c"})
+	if result {
+		t.Fail()
+	}
+	result = SameList([]string{}, []string{})
+	if !result {
+		t.Fail()
+	}
+	result = SameList([]string{"a", "a", "b"}, []string{"a", "b", "b"})
+	if result {
+		t.Fail()
+	}
+}

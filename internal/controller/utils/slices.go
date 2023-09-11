@@ -16,6 +16,10 @@ limitations under the License.
 
 package utils
 
+import (
+	"slices"
+)
+
 func Contains(s []string, str string) bool {
 	for _, v := range s {
 		if v == str {
@@ -30,8 +34,10 @@ func SameList(s1, s2 []string) bool {
 	if len(s1) != len(s2) {
 		return false
 	}
-	for _, v := range s1 {
-		if !Contains(s2, v) {
+	slices.Sort(s1)
+	slices.Sort(s2)
+	for i, v := range s1 {
+		if s2[i] != v {
 			return false
 		}
 	}
