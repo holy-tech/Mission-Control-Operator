@@ -100,3 +100,26 @@ func TestSameList(t *testing.T) {
 		t.Fail()
 	}
 }
+
+func TestRemoveString(t *testing.T) {
+	result := RemoveString([]string{"a", "b", "c"}, "a")
+	if !SameList(result, []string{"b", "c"}) {
+		t.Fail()
+	}
+	result = RemoveString([]string{"a", "b", "a"}, "a")
+	if !SameList(result, []string{"b"}) {
+		t.Fail()
+	}
+	result = RemoveString([]string{"b", "b", "a"}, "a")
+	if !SameList(result, []string{"b", "b"}) {
+		t.Fail()
+	}
+	result = RemoveString([]string{"a", "b", "c"}, "d")
+	if !SameList(result, []string{"a", "b", "c"}) {
+		t.Fail()
+	}
+	result = RemoveString([]string{}, "a")
+	if !SameList(result, []string{}) {
+		t.Fail()
+	}
+}
