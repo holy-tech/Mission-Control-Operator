@@ -88,7 +88,7 @@ func (r *MissionKeyReconciler) Reconcile(ctx context.Context, req ctrl.Request) 
 
 	keyFinalizer := key.Spec.Name
 	if key.ObjectMeta.DeletionTimestamp.IsZero() {
-		if !utils.ContainsString(key.ObjectMeta.Finalizers, keyFinalizer) {
+		if !utils.Contains(key.ObjectMeta.Finalizers, keyFinalizer) {
 			key.ObjectMeta.Finalizers = append(key.ObjectMeta.Finalizers, keyFinalizer)
 			if err := r.Update(context.Background(), key); err != nil {
 				return reconcile.Result{}, err
