@@ -28,7 +28,7 @@ type ProviderData struct {
 
 type VirtualMachineSpec struct {
 	MissionRef  string       `json:"missionRef,omitempty"`
-	ForProvider ProviderData `json:"forProvider,inline"`
+	ForProvider ProviderData `json:"forProvider,omitempty"`
 }
 
 type VirtualMachineStatus struct {
