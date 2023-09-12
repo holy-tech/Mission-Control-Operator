@@ -19,15 +19,16 @@ package compute
 import (
 	"context"
 
+	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
-	"sigs.k8s.io/controller-runtime/pkg/log"
+
+	gcpcomputev1 "github.com/upbound/provider-gcp/apis/compute/v1beta1"
 
 	computev1alpha1 "github.com/holy-tech/Mission-Control-Operator/api/compute/v1alpha1"
 )
 
-// VirtualMachineReconciler reconciles a VirtualMachine object
 type VirtualMachineReconciler struct {
 	client.Client
 	Scheme *runtime.Scheme
@@ -37,24 +38,31 @@ type VirtualMachineReconciler struct {
 //+kubebuilder:rbac:groups=compute.mission-control.apis.io,resources=virtualmachines/status,verbs=get;update;patch
 //+kubebuilder:rbac:groups=compute.mission-control.apis.io,resources=virtualmachines/finalizers,verbs=update
 
-// Reconcile is part of the main kubernetes reconciliation loop which aims to
-// move the current state of the cluster closer to the desired state.
-// TODO(user): Modify the Reconcile function to compare the state specified by
-// the VirtualMachine object against the actual cluster state, and then
-// perform operations to make the cluster state reflect the state specified by
-// the user.
-//
-// For more details, check Reconcile and its Result here:
-// - https://pkg.go.dev/sigs.k8s.io/controller-runtime@v0.15.0/pkg/reconcile
 func (r *VirtualMachineReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
-	_ = log.FromContext(ctx)
+	vm := &computev1alpha1.VirtualMachine{}
+	err := r.Get(ctx, req.NamespacedName, vm)
+	if err != nil {
+		return ctrl.Result{}, err
+	}
 
-	// TODO(user): your logic here
+	// Create virtual machine config
+	gcpvm := gcpcomputev1.Instance{
+		ObjectMeta: v1.ObjectMeta{
+			Name: vm.Spec.ForProvider.Name,
+		},
+		Spec: gcpcomputev1.InstanceSpec{
+			ForProvider: gcpcomputev1.InstanceParameters{
+				Hostname:    &vm.Spec.ForProvider.Name,
+				Zone:        &vm.Spec.ForProvider.Zone,
+				MachineType: &vm.Spec.ForProvider.MachineType,
+			},
+		},
+	}
+	r.Create(ctx, &gcpvm)
 
 	return ctrl.Result{}, nil
 }
 
-// SetupWithManager sets up the controller with the Manager.
 func (r *VirtualMachineReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&computev1alpha1.VirtualMachine{}).
