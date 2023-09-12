@@ -6,5 +6,5 @@ spec:
   missionRef: "sample"
   forProvider:
     name: "samplevm"
-    zone: "us-west"
+    location: "us-west"
     machineType: "small"
