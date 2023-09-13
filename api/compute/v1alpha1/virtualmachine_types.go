@@ -24,6 +24,8 @@ type ProviderData struct {
 	Name        string `json:"name,omitempty"`
 	Zone        string `json:"location,omitempty"`
 	MachineType string `json:"machineType,omitempty"`
+	Image       string `json:"image,omitempty"`
+	Network     string `json:"network,omitempty"`
 }
 
 type VirtualMachineSpec struct {
