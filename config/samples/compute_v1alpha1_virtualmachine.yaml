@@ -8,3 +8,5 @@ spec:
     name: "samplevm"
     location: "us-west"
     machineType: "small"
+    image: "debian-cloud/debian-11"
+    network: "default"

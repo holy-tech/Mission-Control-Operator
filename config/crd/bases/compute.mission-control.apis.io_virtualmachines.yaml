@@ -35,11 +35,15 @@ spec:
             properties:
               forProvider:
                 properties:
+                  image:
+                    type: string
                   location:
                     type: string
                   machineType:
                     type: string
                   name:
+                    type: string
+                  network:
                     type: string
                 type: object
               missionRef:
