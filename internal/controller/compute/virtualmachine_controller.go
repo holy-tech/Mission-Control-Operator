@@ -44,6 +44,8 @@ func (r *VirtualMachineReconciler) Reconcile(ctx context.Context, req ctrl.Reque
 	if err != nil {
 		return ctrl.Result{}, err
 	}
+	image := "debian-cloud/debian-11"
+	network := "default"
 
 	// Create virtual machine config
 	gcpvm := gcpcomputev1.Instance{
@@ -55,6 +57,14 @@ func (r *VirtualMachineReconciler) Reconcile(ctx context.Context, req ctrl.Reque
 				Hostname:    &vm.Spec.ForProvider.Name,
 				Zone:        &vm.Spec.ForProvider.Zone,
 				MachineType: &vm.Spec.ForProvider.MachineType,
+				BootDisk: []gcpcomputev1.BootDiskParameters{{
+					InitializeParams: []gcpcomputev1.InitializeParamsParameters{{
+						Image: &image,
+					}},
+				}},
+				NetworkInterface: []gcpcomputev1.NetworkInterfaceParameters{{
+					Network: &network,
+				}},
 			},
 		},
 	}
