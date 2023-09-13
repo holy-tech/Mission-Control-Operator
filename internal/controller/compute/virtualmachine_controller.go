@@ -58,9 +58,9 @@ func (r *VirtualMachineReconciler) Reconcile(ctx context.Context, req ctrl.Reque
 			},
 		},
 	}
-	r.Create(ctx, &gcpvm)
+	err = r.Create(ctx, &gcpvm)
 
-	return ctrl.Result{}, nil
+	return ctrl.Result{}, err
 }
 
 func (r *VirtualMachineReconciler) SetupWithManager(mgr ctrl.Manager) error {

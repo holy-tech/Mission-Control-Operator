@@ -32,6 +32,7 @@ import (
 	controllerscheme "sigs.k8s.io/controller-runtime/pkg/scheme"
 
 	cpv1 "github.com/crossplane/crossplane/apis/pkg/v1"
+	gcpcomputev1 "github.com/upbound/provider-gcp/apis/compute/v1beta1"
 	gcpv1 "github.com/upbound/provider-gcp/apis/v1beta1"
 
 	computev1alpha1 "github.com/holy-tech/Mission-Control-Operator/api/compute/v1alpha1"
@@ -51,13 +52,27 @@ func init() {
 
 	utilruntime.Must(missionv1alpha1.AddToScheme(scheme))
 	crossplaneSchemeBuilder := &controllerscheme.Builder{GroupVersion: apischeme.GroupVersion{Group: "pkg.crossplane.io", Version: "v1"}}
-	crossplaneSchemeBuilder.Register(&cpv1.Provider{}, &cpv1.ProviderList{})
+	crossplaneSchemeBuilder.Register(
+		&cpv1.Provider{},
+		&cpv1.ProviderList{},
+	)
 	gcpSchemeBuilder := &controllerscheme.Builder{GroupVersion: apischeme.GroupVersion{Group: "gcp.upbound.io", Version: "v1beta1"}}
-	gcpSchemeBuilder.Register(&gcpv1.ProviderConfig{}, &gcpv1.ProviderConfigList{})
+	gcpSchemeBuilder.Register(
+		&gcpv1.ProviderConfig{},
+		&gcpv1.ProviderConfigList{},
+	)
+	gcpComputeSchemeBuilder := &controllerscheme.Builder{GroupVersion: apischeme.GroupVersion{Group: "compute.gcp.upbound.io", Version: "v1beta1"}}
+	gcpComputeSchemeBuilder.Register(
+		&gcpcomputev1.Instance{},
+		&gcpcomputev1.InstanceList{},
+	)
 	if err := crossplaneSchemeBuilder.AddToScheme(scheme); err != nil {
 		os.Exit(1)
 	}
 	if err := gcpSchemeBuilder.AddToScheme(scheme); err != nil {
+		os.Exit(1)
+	}
+	if err := gcpComputeSchemeBuilder.AddToScheme(scheme); err != nil {
 		os.Exit(1)
 	}
 	utilruntime.Must(computev1alpha1.AddToScheme(scheme))
