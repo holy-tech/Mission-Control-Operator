@@ -18,6 +18,7 @@ package compute
 
 import (
 	"context"
+	"reflect"
 
 	k8serrors "k8s.io/apimachinery/pkg/api/errors"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -63,7 +64,6 @@ func (r *VirtualMachineReconciler) ReconcileVirtualMachine(ctx context.Context, 
 		},
 		Spec: gcpcomputev1.InstanceSpec{
 			ForProvider: gcpcomputev1.InstanceParameters{
-				Hostname:    &vm.Spec.ForProvider.Name,
 				Zone:        &vm.Spec.ForProvider.Zone,
 				MachineType: &vm.Spec.ForProvider.MachineType,
 				BootDisk: []gcpcomputev1.BootDiskParameters{{
@@ -92,7 +92,9 @@ func (r *VirtualMachineReconciler) ReconcileVirtualMachine(ctx context.Context, 
 		}
 		return err
 	}
-	currentgcpvm.Spec = gcpvm.Spec
+	if reflect.DeepEqual(currentgcpvm.Spec, gcpvm.Spec) {
+		return nil
+	}
 	return r.Update(ctx, &currentgcpvm)
 }
 
