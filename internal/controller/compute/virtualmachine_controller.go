@@ -51,11 +51,12 @@ func (r *VirtualMachineReconciler) Reconcile(ctx context.Context, req ctrl.Reque
 
 	mission, err := r.GetMission(ctx, vm.Spec.MissionRef, req.Namespace)
 
-	return ctrl.Result{}, r.ReconcileVirtualMachine(ctx, vm, &mission, req)
+	return ctrl.Result{}, r.ReconcileVirtualMachine(ctx, vm, &mission)
 }
 
-func (r *VirtualMachineReconciler) ReconcileVirtualMachine(ctx context.Context, vm *computev1alpha1.VirtualMachine, mission *v1alpha1.Mission, req ctrl.Request) error {
+func (r *VirtualMachineReconciler) ReconcileVirtualMachine(ctx context.Context, vm *computev1alpha1.VirtualMachine, mission *v1alpha1.Mission) error {
 	// Create virtual machine config
+	currentgcpvm := gcpcomputev1.Instance{}
 	gcpvm := gcpcomputev1.Instance{
 		ObjectMeta: v1.ObjectMeta{
 			Name: vm.Spec.ForProvider.Name,
@@ -84,13 +85,15 @@ func (r *VirtualMachineReconciler) ReconcileVirtualMachine(ctx context.Context, 
 	if err := controllerutil.SetControllerReference(vm, &gcpvm, r.Scheme); err != nil {
 		return err
 	}
-	if err := r.Get(ctx, req.NamespacedName, &gcpvm); err != nil {
+	err := r.Get(ctx, types.NamespacedName{Name: vm.Spec.ForProvider.Name}, &currentgcpvm)
+	if err != nil {
 		if k8serrors.IsNotFound(err) {
 			return r.Create(ctx, &gcpvm)
 		}
 		return err
 	}
-	return r.Update(ctx, &gcpvm)
+	currentgcpvm.Spec = gcpvm.Spec
+	return r.Update(ctx, &currentgcpvm)
 }
 
 func (r *VirtualMachineReconciler) GetMission(ctx context.Context, missionName, missionNamespace string) (v1alpha1.Mission, error) {
