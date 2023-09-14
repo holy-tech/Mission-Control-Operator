@@ -65,7 +65,6 @@ func (r *VirtualMachineReconciler) ReconcileVirtualMachine(ctx context.Context, 
 		},
 		Spec: gcpcomputev1.InstanceSpec{
 			ForProvider: gcpcomputev1.InstanceParameters{
-				Hostname:    &vm.Spec.ForProvider.Name,
 				Zone:        &vm.Spec.ForProvider.Zone,
 				MachineType: &vm.Spec.ForProvider.MachineType,
 				BootDisk: []gcpcomputev1.BootDiskParameters{{
