@@ -19,10 +19,12 @@ package compute
 import (
 	"context"
 
+	k8serrors "k8s.io/apimachinery/pkg/api/errors"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/runtime"
+	runtime "k8s.io/apimachinery/pkg/runtime"
 	ctrl "sigs.k8s.io/controller-runtime"
-	"sigs.k8s.io/controller-runtime/pkg/client"
+	client "sigs.k8s.io/controller-runtime/pkg/client"
+	controllerutil "sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 
 	gcpcomputev1 "github.com/upbound/provider-gcp/apis/compute/v1beta1"
 
@@ -45,6 +47,10 @@ func (r *VirtualMachineReconciler) Reconcile(ctx context.Context, req ctrl.Reque
 		return ctrl.Result{}, err
 	}
 
+	return ctrl.Result{}, r.ReconcileVirtualMachine(ctx, vm, req)
+}
+
+func (r *VirtualMachineReconciler) ReconcileVirtualMachine(ctx context.Context, vm *computev1alpha1.VirtualMachine, req ctrl.Request) error {
 	// Create virtual machine config
 	gcpvm := gcpcomputev1.Instance{
 		ObjectMeta: v1.ObjectMeta{
@@ -66,13 +72,21 @@ func (r *VirtualMachineReconciler) Reconcile(ctx context.Context, req ctrl.Reque
 			},
 		},
 	}
-	err = r.Create(ctx, &gcpvm)
-
-	return ctrl.Result{}, err
+	if err := controllerutil.SetControllerReference(vm, &gcpvm, r.Scheme); err != nil {
+		return err
+	}
+	if err := r.Get(ctx, req.NamespacedName, &gcpvm); err != nil {
+		if k8serrors.IsNotFound(err) {
+			return r.Create(ctx, &gcpvm)
+		}
+		return err
+	}
+	return r.Update(ctx, &gcpvm)
 }
 
 func (r *VirtualMachineReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&computev1alpha1.VirtualMachine{}).
+		Owns(&gcpcomputev1.Instance{}).
 		Complete(r)
 }
