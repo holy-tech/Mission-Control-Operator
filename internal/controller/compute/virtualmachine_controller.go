@@ -22,13 +22,15 @@ import (
 	k8serrors "k8s.io/apimachinery/pkg/api/errors"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	runtime "k8s.io/apimachinery/pkg/runtime"
+	types "k8s.io/apimachinery/pkg/types"
 	ctrl "sigs.k8s.io/controller-runtime"
 	client "sigs.k8s.io/controller-runtime/pkg/client"
 	controllerutil "sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 
-	gcpcomputev1 "github.com/upbound/provider-gcp/apis/compute/v1beta1"
-
+	cpcommonv1 "github.com/crossplane/crossplane-runtime/apis/common/v1"
 	computev1alpha1 "github.com/holy-tech/Mission-Control-Operator/api/compute/v1alpha1"
+	v1alpha1 "github.com/holy-tech/Mission-Control-Operator/api/mission/v1alpha1"
+	gcpcomputev1 "github.com/upbound/provider-gcp/apis/compute/v1beta1"
 )
 
 type VirtualMachineReconciler struct {
@@ -47,10 +49,12 @@ func (r *VirtualMachineReconciler) Reconcile(ctx context.Context, req ctrl.Reque
 		return ctrl.Result{}, err
 	}
 
-	return ctrl.Result{}, r.ReconcileVirtualMachine(ctx, vm, req)
+	mission, err := r.GetMission(ctx, vm.Spec.MissionRef, req.Namespace)
+
+	return ctrl.Result{}, r.ReconcileVirtualMachine(ctx, vm, &mission, req)
 }
 
-func (r *VirtualMachineReconciler) ReconcileVirtualMachine(ctx context.Context, vm *computev1alpha1.VirtualMachine, req ctrl.Request) error {
+func (r *VirtualMachineReconciler) ReconcileVirtualMachine(ctx context.Context, vm *computev1alpha1.VirtualMachine, mission *v1alpha1.Mission, req ctrl.Request) error {
 	// Create virtual machine config
 	gcpvm := gcpcomputev1.Instance{
 		ObjectMeta: v1.ObjectMeta{
@@ -70,6 +74,11 @@ func (r *VirtualMachineReconciler) ReconcileVirtualMachine(ctx context.Context, 
 					Network: &vm.Spec.ForProvider.Network,
 				}},
 			},
+			ResourceSpec: cpcommonv1.ResourceSpec{
+				ProviderConfigReference: &cpcommonv1.Reference{
+					Name: "gcloud-provider",
+				},
+			},
 		},
 	}
 	if err := controllerutil.SetControllerReference(vm, &gcpvm, r.Scheme); err != nil {
@@ -82,6 +91,12 @@ func (r *VirtualMachineReconciler) ReconcileVirtualMachine(ctx context.Context, 
 		return err
 	}
 	return r.Update(ctx, &gcpvm)
+}
+
+func (r *VirtualMachineReconciler) GetMission(ctx context.Context, missionName, missionNamespace string) (v1alpha1.Mission, error) {
+	mission := v1alpha1.Mission{}
+	err := r.Get(ctx, types.NamespacedName{Name: missionName, Namespace: missionNamespace}, &mission)
+	return mission, err
 }
 
 func (r *VirtualMachineReconciler) SetupWithManager(mgr ctrl.Manager) error {
