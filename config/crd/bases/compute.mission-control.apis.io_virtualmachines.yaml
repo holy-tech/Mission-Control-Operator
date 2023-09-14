@@ -12,7 +12,7 @@ spec:
     listKind: VirtualMachineList
     plural: virtualmachines
     singular: virtualmachine
-  scope: Namespaced
+  scope: Cluster
   versions:
   - name: v1alpha1
     schema:
