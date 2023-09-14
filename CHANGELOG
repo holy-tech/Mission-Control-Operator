@@ -8,6 +8,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - Enabled multi-group settings and changed structure as specified by kubebuilder.
 - Unit tests for utility functions.
+- Generic resources:
+    - Virtual Machines
+- GCP resources:
+    - Compute Engine Instances
 
 ## [0.2.0] - 09-09-2023
 ### Added
