@@ -27,4 +27,13 @@ resources:
   kind: MissionKey
   path: github.com/holy-tech/Mission-Control-Operator/api/v1alpha1
   version: v1alpha1
+- api:
+    crdVersion: v1
+    namespaced: true
+  controller: true
+  domain: mission-control.apis.io
+  group: compute
+  kind: VirtualMachine
+  path: github.com/holy-tech/Mission-Control-Operator/api/compute/v1alpha1
+  version: v1alpha1
 version: "3"

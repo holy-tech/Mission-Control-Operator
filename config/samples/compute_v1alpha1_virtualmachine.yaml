@@ -1,0 +1,12 @@
+apiVersion: compute.mission-control.apis.io/v1alpha1
+kind: VirtualMachine
+metadata:
+  name: virtualmachine-sample
+spec:
+  missionRef: "sample"
+  forProvider:
+    name: "samplevm"
+    location: "us-west"
+    machineType: "small"
+    image: "debian-cloud/debian-11"
+    network: "default"

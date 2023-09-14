@@ -20,50 +20,44 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-type CredentialConfig struct {
-	Name      string `json:"name,omitempty"`
-	Namespace string `json:"namespace,omitempty"`
-	Key       string `json:"key,omitempty"`
+type ProviderData struct {
+	Name        string `json:"name,omitempty"`
+	Zone        string `json:"location,omitempty"`
+	MachineType string `json:"machineType,omitempty"`
+	Image       string `json:"image,omitempty"`
+	Network     string `json:"network,omitempty"`
 }
 
-type PackageConfig struct {
-	Provider    string           `json:"provider,omitempty"`
-	ProjectID   string           `json:"project_id,omitempty"`
-	Credentials CredentialConfig `json:"credentials,omitempty"`
+type VirtualMachineSpec struct {
+	MissionRef  string       `json:"missionRef,omitempty"`
+	ForProvider ProviderData `json:"forProvider,omitempty"`
 }
 
-type MissionPackageStatus struct {
-	Installed string `json:"installed,omitempty"`
-}
-
-type MissionSpec struct {
-	Packages []PackageConfig `json:"packages,omitempty"`
-}
-
-type MissionStatus struct {
-	PackageStatus map[string]MissionPackageStatus `json:"package_status,omitempty"`
+type VirtualMachineStatus struct {
 }
 
 //+kubebuilder:object:root=true
 //+kubebuilder:subresource:status
 //+kubebuilder:resource:scope=Cluster
 
-type Mission struct {
+// VirtualMachine is the Schema for the virtualmachines API
+type VirtualMachine struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
 
-	Spec   MissionSpec   `json:"spec,omitempty"`
-	Status MissionStatus `json:"status,omitempty"`
+	Spec   VirtualMachineSpec   `json:"spec,omitempty"`
+	Status VirtualMachineStatus `json:"status,omitempty"`
 }
 
 //+kubebuilder:object:root=true
 
-type MissionList struct {
+// VirtualMachineList contains a list of VirtualMachine
+type VirtualMachineList struct {
 	metav1.TypeMeta `json:",inline"`
 	metav1.ListMeta `json:"metadata,omitempty"`
-	Items           []Mission `json:"items"`
+	Items           []VirtualMachine `json:"items"`
 }
 
 func init() {
-	SchemeBuilder.Register(&Mission{}, &MissionList{})
+	SchemeBuilder.Register(&VirtualMachine{}, &VirtualMachineList{})
 }
