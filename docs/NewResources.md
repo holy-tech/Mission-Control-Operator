@@ -47,7 +47,7 @@ The previous steps added a "kubernetes object" into the system, that we can now 
 
 The logic for a kubernetes resource is inside something called the controller. This should be in the file `internal/controller/<GROUP>/<RESOURCE>_controller.go`.
 
-To document this process would be too long so instead look at the documentation about [reconciling best practices](./ReconcilingStrategies) and refer to the current code.
+To document this process would be too long so instead look at the documentation about [reconciling best practices](./ReconcilingStrategies.md) and refer to the current code.
 
 ### Testing the controller
 
