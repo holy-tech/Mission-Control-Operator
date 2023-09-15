@@ -48,3 +48,7 @@ The previous steps added a "kubernetes object" into the system, that we can now 
 The logic for a kubernetes resource is inside something called the controller. This should be in the file `internal/controller/<GROUP>/<RESOURCE>_controller.go`.
 
 To document this process would be too long so instead look at the documentation about [reconciling best practices](./ReconcilingStrategies) and refer to the current code.
+
+### Testing the controller
+
+If you are using VSCode, get the testing file from `hack/hoftherose/public/vscode/launch.json` Copy this into `.vscode/launch.json` and you should be able to run a testing evironment now. Note that unless the code is actively running, the CRDs will only serve as information. CRDs do not have any functionality unless paired with a running controller.
