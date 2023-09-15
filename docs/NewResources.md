@@ -21,3 +21,21 @@ The default values for the resource status and spec need to be changed. This can
 
 `//+kubebuilder:resource:scope=Cluster`
 
+Once you are finished run the `make install` command to finish your setup. No logic will be implemented just yet but you will be able to create a sample and apply it. Basic sample structure should be stored in `config/samples/<GROUP>_<GROUP_VERSION>_<RESOURCE>.yaml`, where a template should already exist to be edited.
+
+### Visualizing Status or Spec parameters.
+
+Although you can add different Spec and Status definitions, these will not appear when querying an applied resource with `kubectl get <RESOURCE>`
+
+To change this go back to the file we modified before in the api folder, and add the following line:
+```
+//+kubebuilder:printcolumn:name="COLUMN_NAME",type=string,JSONPath=".spec.<RESOURCE_DATA>"
+```
+
+This will modify the table out put on `kubectl get <RESOURCE>` and `.spec.<RESOURCE_DATA>` can be changed to whichever path the data you have is located in. This will also work with changing spec to status and supports different data types than just string.
+
+To output the age of the resource specifically use the following line
+
+```
+//+kubebuilder:printcolumn:name="Age",type="date",JSONPath=".metadata.creationTimestamp"
+```
