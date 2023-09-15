@@ -13,3 +13,11 @@ To create a new Mission Control CRD use the following command with kubebuilder
 
 `kubebuilder create api --group <GROUP> --version <GROUP_VERSION> --kind <RESOURCE_NAME> --namespaced false`
 
+This will generate the basic code for adding our CRD, but we still need to create and apply our definitions to kubernetes. All of this can be handled by running `make install`, but this can be done later.
+
+### Editing CRD
+
+The default values for the resource status and spec need to be changed. This can be done in the file `api/<GROUP>/<GROUP_VERSION>/<RESOURCE>_types.go`. Also ensure that the following line was correctly added and that the CRD is set to cluster-scoped.
+
+`//+kubebuilder:resource:scope=Cluster`
+
