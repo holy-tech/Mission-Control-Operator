@@ -52,3 +52,8 @@ To document this process would be too long so instead look at the documentation 
 ### Testing the controller
 
 If you are using VSCode, get the testing file from `hack/hoftherose/public/vscode/launch.json` Copy this into `.vscode/launch.json` and you should be able to run a testing evironment now. Note that unless the code is actively running, the CRDs will only serve as information. CRDs do not have any functionality unless paired with a running controller.
+
+### Deploying the controller
+
+In order to run the controller full time you need to create an image and run this image on the kubernetes cluster.
+>Note: This hasn't been done yet so documentation is in standby.
