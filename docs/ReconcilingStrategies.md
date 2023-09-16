@@ -36,3 +36,27 @@ Most of the time these strings need to be added and maintained when the CR is fi
 CR will NOT be deleted even if it has an expired deleted timestamp until all of its finalizers are removed.
 
 ### Adding resource to Scheme
+
+Sometimes we need external resources from seperate operators, for example crossplane and crossplanes providers. If used directly, the items will look for their definitions with the wrong group and version. To fix this, you will need to add the object to the Scheme in the `cmd/main.go` file.
+
+First import the code to the main file, the follow the below structure to create a new SchemeBuilder object.
+
+```
+import (
+    ...
+    cpv1 "github.com/crossplane/crossplane/apis/pkg/v1"
+    ...
+)
+func init() {
+    ...
+    crossplaneSchemeBuilder := &controllerscheme.Builder{GroupVersion: apischeme.GroupVersion{Group: "pkg.crossplane.io", Version: "v1"}}
+    crossplaneSchemeBuilder.Register(
+        &cpv1.Provider{},
+        &cpv1.ProviderList{},
+    )
+    if err := crossplaneSchemeBuilder.AddToScheme(scheme); err != nil {
+        os.Exit(1)
+    }
+    ...
+}
+```
