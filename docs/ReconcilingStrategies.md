@@ -25,6 +25,13 @@ func (r *MissionKeyReconciler) SetupWithManager(mgr ctrl.Manager) error {
 ```
 ### Updating created resources
 
+In most cases, changes in the Mission Control CRD yaml needs to be propagated to some of the Crossplane resources owned by it. They also expect the state of these yaml files to stay consistent with what is written in Mission Control, or in other words, we don't want people manually changing the Crossplane objects without going through Mission Control.
+
+There are different ways to update depending on what you changed, but for the most part the steps are:
+- Get the object into an empty declaration.
+- Make changes to reflect desired outcome.
+- Use the r.Update method to upload changes back to kubernetes.
+
 ### Creating finalizers
 
 Finalizers are ways to ensure that the changes we make are undone before deleting our Custom Resource. This can be achieved by giving ownership to the object, but finalizers ensure that the order is maintained. Do not delete this CR until I have cleaned up successfully. In implementation, finalizers are just strings added and removed in the CR yaml.
