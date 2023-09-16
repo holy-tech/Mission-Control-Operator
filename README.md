@@ -4,10 +4,12 @@
 
 [![CircleCI](https://dl.circleci.com/status-badge/img/gh/holy-tech/Mission-Control-Operator/tree/main.svg?style=svg)](https://dl.circleci.com/status-badge/redirect/gh/holy-tech/Mission-Control-Operator/tree/main)
 
-// TODO(user): Add simple overview of use/purpose
+This project serves as Middleware for the MissionControl plugin in OpenLens as well as a hybrid cloud tooling that works with Crossplane.
 
 ## Description
-// TODO(user): An in-depth paragraph about your project and overview of use
+The operators in this project are created to serve as generic simple resources that then use Crossplane and kubernetes to provision these objects. This means that openlens becomes a centralized platform for different cloud native projects, regardless of the provider.
+
+>Note: The project is in its early stages but as time progresses, the work will begin to transition to the front end to provide: easy deployment of infrastructure, exporting projects to crossplane or terraform definitions and migrating projects to a different Cloud Provider.
 
 ## Getting Started
 You’ll need a Kubernetes cluster to run against. You can use [KIND](https://sigs.k8s.io/kind) to get a local cluster for testing, or run against a remote cluster.
@@ -47,7 +49,7 @@ make undeploy
 ```
 
 ## Contributing
-// TODO(user): Add detailed information on how you would like others to contribute to this project
+We appreciate your help! Please go over [CONTRIBUTING](./CONTRIBUTING) before creating your first PR.
 
 ### How it works
 This project aims to follow the Kubernetes [Operator pattern](https://kubernetes.io/docs/concepts/extend-kubernetes/operator/)
