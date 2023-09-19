@@ -54,6 +54,9 @@ func (r *StorageBucketsReconciler) Reconcile(ctx context.Context, req ctrl.Reque
 	}
 
 	mission, err := r.GetMission(ctx, bucket.Spec.MissionRef, req.Namespace)
+	if err != nil {
+		return ctrl.Result{}, err
+	}
 	result, err := r.ReconcileStorageBucket(ctx, bucket, &mission)
 	return result, err
 }
@@ -74,7 +77,7 @@ func (r *StorageBucketsReconciler) ReconcileStorageBucket(ctx context.Context, b
 			},
 			ResourceSpec: cpcommonv1.ResourceSpec{
 				ProviderConfigReference: &cpcommonv1.Reference{
-					Name: key.Spec.Name,
+					Name: key.GetName(),
 				},
 			},
 		},
