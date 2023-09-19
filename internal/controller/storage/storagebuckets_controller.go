@@ -99,5 +99,6 @@ func (r *StorageBucketsReconciler) ReconcileStorageBucket(ctx context.Context, b
 func (r *StorageBucketsReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&storagev1alpha1.StorageBuckets{}).
+		Owns(&gcpstoragev1.Bucket{}).
 		Complete(r)
 }
