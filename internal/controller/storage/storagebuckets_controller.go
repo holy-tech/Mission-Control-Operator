@@ -59,6 +59,10 @@ func (r *StorageBucketsReconciler) Reconcile(ctx context.Context, req ctrl.Reque
 }
 
 func (r *StorageBucketsReconciler) ReconcileStorageBucket(ctx context.Context, bucket *storagev1alpha1.StorageBuckets, mission *v1alpha1.Mission) (ctrl.Result, error) {
+	key, err := r.GetMissionKey(ctx, *mission, "GCP")
+	if err != nil {
+		return ctrl.Result{}, err
+	}
 	currentgcpbucket := gcpstoragev1.Bucket{}
 	gcpbucket := gcpstoragev1.Bucket{
 		ObjectMeta: v1.ObjectMeta{
@@ -70,7 +74,7 @@ func (r *StorageBucketsReconciler) ReconcileStorageBucket(ctx context.Context, b
 			},
 			ResourceSpec: cpcommonv1.ResourceSpec{
 				ProviderConfigReference: &cpcommonv1.Reference{
-					Name: "gcloud-provider",
+					Name: key.Spec.Name,
 				},
 			},
 		},
@@ -78,7 +82,7 @@ func (r *StorageBucketsReconciler) ReconcileStorageBucket(ctx context.Context, b
 	if err := controllerutil.SetControllerReference(bucket, &gcpbucket, r.Scheme); err != nil {
 		return ctrl.Result{}, err
 	}
-	err := r.Get(ctx, types.NamespacedName{Name: bucket.Spec.ForProvider.Name}, &currentgcpbucket)
+	err = r.Get(ctx, types.NamespacedName{Name: bucket.Spec.ForProvider.Name}, &currentgcpbucket)
 	if err != nil {
 		if k8serrors.IsNotFound(err) {
 			return ctrl.Result{}, r.Create(ctx, &gcpbucket)
