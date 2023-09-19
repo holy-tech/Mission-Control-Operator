@@ -21,6 +21,8 @@ import (
 	"sort"
 )
 
+// Slices utilities
+
 func Contains(s []string, str string) bool {
 	for _, v := range s {
 		if v == str {
@@ -45,6 +47,8 @@ func SameList(s1, s2 []string) bool {
 	return true
 }
 
+// Mapping utilities
+
 func GetValues(vm map[string]string) []string {
 	var keys []string
 	for k := range vm {
@@ -59,6 +63,8 @@ func HasSameKeys(vm1, vm2 map[string]string) bool {
 	k2 := GetValues(vm2)
 	return SameList(k1, k2)
 }
+
+// String utilities
 
 func RemoveString(slice []string, s string) (result []string) {
 	for _, item := range slice {
