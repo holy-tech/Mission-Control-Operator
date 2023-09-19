@@ -52,7 +52,7 @@ func (r *MissionKeyReconciler) Reconcile(ctx context.Context, req ctrl.Request) 
 
 	// Check if secret and service account still exists if not create.
 	secret := v1.Secret{
-		Data: map[string][]byte{"keyfile": key.Spec.Data},
+		Data: map[string][]byte{"creds": key.Spec.Data},
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      req.Name,
 			Namespace: req.Namespace,
@@ -75,8 +75,8 @@ func (r *MissionKeyReconciler) Reconcile(ctx context.Context, req ctrl.Request) 
 			return ctrl.Result{}, r.Create(ctx, &secret)
 		}
 		return ctrl.Result{}, err
-	} else if !reflect.DeepEqual(key.Spec.Data, secret.Data["keyfile"]) {
-		secret.Data = map[string][]byte{"keyfile": key.Spec.Data}
+	} else if !reflect.DeepEqual(key.Spec.Data, secret.Data["creds"]) {
+		secret.Data = map[string][]byte{"creds": key.Spec.Data}
 		return ctrl.Result{}, r.Update(ctx, &secret)
 	}
 	if err = r.Get(ctx, req.NamespacedName, &sa); err != nil {
