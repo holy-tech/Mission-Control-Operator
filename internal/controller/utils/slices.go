@@ -18,6 +18,7 @@ package utils
 
 import (
 	"slices"
+	"sort"
 )
 
 func Contains(s []string, str string) bool {
@@ -42,4 +43,29 @@ func SameList(s1, s2 []string) bool {
 		}
 	}
 	return true
+}
+
+func GetValues(vm map[string]string) []string {
+	var keys []string
+	for k := range vm {
+		keys = append(keys, k)
+	}
+	sort.Strings(keys)
+	return keys
+}
+
+func HasSameKeys(vm1, vm2 map[string]string) bool {
+	k1 := GetValues(vm1)
+	k2 := GetValues(vm2)
+	return SameList(k1, k2)
+}
+
+func RemoveString(slice []string, s string) (result []string) {
+	for _, item := range slice {
+		if item == s {
+			continue
+		}
+		result = append(result, item)
+	}
+	return
 }
