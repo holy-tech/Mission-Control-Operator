@@ -25,15 +25,11 @@ import (
 	v1alpha1 "github.com/holy-tech/Mission-Control-Operator/api/mission/v1alpha1"
 )
 
-type MissionGetter interface {
-	Get(ctx context.Context, key types.NamespacedName, obj client.Object, opts ...client.GetOption) error
+type MissionClient struct {
+	client.Client
 }
 
-type MissionConfigGetter struct {
-	MissionGetter
-}
-
-func (r *MissionConfigGetter) GetMission(ctx context.Context, missionName, missionNamespace string) (v1alpha1.Mission, error) {
+func (r *MissionClient) GetMission(ctx context.Context, missionName, missionNamespace string) (v1alpha1.Mission, error) {
 	mission := v1alpha1.Mission{}
 	err := r.Get(ctx, types.NamespacedName{Name: missionName, Namespace: missionNamespace}, &mission)
 	return mission, err
