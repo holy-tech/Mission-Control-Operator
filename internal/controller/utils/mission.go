@@ -38,13 +38,12 @@ func (r *MissionClient) GetMission(ctx context.Context, missionName, missionName
 }
 
 func (r *MissionClient) GetMissionKey(ctx context.Context, mission v1alpha1.Mission, provider string) (v1alpha1.MissionKey, error) {
-
 	for _, pkg := range mission.Spec.Packages {
 		missionkey := v1alpha1.MissionKey{}
 		if pkg.Provider != provider {
 			continue
 		}
-		err := r.Get(ctx, types.NamespacedName{Name: pkg.Credentials.Key}, &missionkey)
+		err := r.Get(ctx, types.NamespacedName{Name: pkg.Credentials.Name, Namespace: "default"}, &missionkey)
 		return missionkey, err
 	}
 	msg := fmt.Sprintf("No credentials for provider %s", provider)
