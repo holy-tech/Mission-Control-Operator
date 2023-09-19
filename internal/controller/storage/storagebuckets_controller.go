@@ -47,14 +47,14 @@ type StorageBucketsReconciler struct {
 //+kubebuilder:rbac:groups=storage.mission-control.apis.io,resources=storagebuckets/finalizers,verbs=update
 
 func (r *StorageBucketsReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
-	vm := &storagev1alpha1.StorageBuckets{}
-	err := r.Get(ctx, req.NamespacedName, vm)
+	bucket := &storagev1alpha1.StorageBuckets{}
+	err := r.Get(ctx, req.NamespacedName, bucket)
 	if err != nil {
 		return ctrl.Result{}, err
 	}
 
-	mission, err := r.GetMission(ctx, vm.Spec.MissionRef, req.Namespace)
-	result, err := r.ReconcileStorageBucket(ctx, vm, &mission)
+	mission, err := r.GetMission(ctx, bucket.Spec.MissionRef, req.Namespace)
+	result, err := r.ReconcileStorageBucket(ctx, bucket, &mission)
 	return result, err
 }
 
