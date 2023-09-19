@@ -25,7 +25,6 @@ import (
 	runtime "k8s.io/apimachinery/pkg/runtime"
 	types "k8s.io/apimachinery/pkg/types"
 	ctrl "sigs.k8s.io/controller-runtime"
-	client "sigs.k8s.io/controller-runtime/pkg/client"
 	controllerutil "sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 
@@ -37,9 +36,8 @@ import (
 )
 
 type VirtualMachineReconciler struct {
-	client.Client
+	utils.MissionClient
 	Scheme *runtime.Scheme
-	utils.MissionConfigGetter
 }
 
 //+kubebuilder:rbac:groups=compute.mission-control.apis.io,resources=virtualmachines,verbs=get;list;watch;create;update;patch;delete
@@ -54,6 +52,9 @@ func (r *VirtualMachineReconciler) Reconcile(ctx context.Context, req ctrl.Reque
 	}
 
 	mission, err := r.GetMission(ctx, vm.Spec.MissionRef, req.Namespace)
+	if err != nil {
+		return ctrl.Result{}, err
+	}
 	result, err := r.ReconcileVirtualMachine(ctx, vm, &mission)
 	return result, err
 }
