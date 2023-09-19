@@ -32,12 +32,14 @@ import (
 	cpcommonv1 "github.com/crossplane/crossplane-runtime/apis/common/v1"
 	computev1alpha1 "github.com/holy-tech/Mission-Control-Operator/api/compute/v1alpha1"
 	v1alpha1 "github.com/holy-tech/Mission-Control-Operator/api/mission/v1alpha1"
+	utils "github.com/holy-tech/Mission-Control-Operator/internal/controller/utils"
 	gcpcomputev1 "github.com/upbound/provider-gcp/apis/compute/v1beta1"
 )
 
 type VirtualMachineReconciler struct {
 	client.Client
 	Scheme *runtime.Scheme
+	utils.MissionConfigGetter
 }
 
 //+kubebuilder:rbac:groups=compute.mission-control.apis.io,resources=virtualmachines,verbs=get;list;watch;create;update;patch;delete
@@ -97,12 +99,6 @@ func (r *VirtualMachineReconciler) ReconcileVirtualMachine(ctx context.Context, 
 		return ctrl.Result{}, nil
 	}
 	return reconcile.Result{}, r.Update(ctx, &currentgcpvm)
-}
-
-func (r *VirtualMachineReconciler) GetMission(ctx context.Context, missionName, missionNamespace string) (v1alpha1.Mission, error) {
-	mission := v1alpha1.Mission{}
-	err := r.Get(ctx, types.NamespacedName{Name: missionName, Namespace: missionNamespace}, &mission)
-	return mission, err
 }
 
 func (r *VirtualMachineReconciler) SetupWithManager(mgr ctrl.Manager) error {
