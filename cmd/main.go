@@ -32,6 +32,7 @@ import (
 	controllerscheme "sigs.k8s.io/controller-runtime/pkg/scheme"
 
 	cpv1 "github.com/crossplane/crossplane/apis/pkg/v1"
+	utils "github.com/holy-tech/Mission-Control-Operator/internal/controller/utils"
 	gcpcomputev1 "github.com/upbound/provider-gcp/apis/compute/v1beta1"
 	gcpstoragev1 "github.com/upbound/provider-gcp/apis/storage/v1beta1"
 	gcpv1 "github.com/upbound/provider-gcp/apis/v1beta1"
@@ -135,7 +136,9 @@ func main() {
 		os.Exit(1)
 	}
 	if err = (&computecontroller.VirtualMachineReconciler{
-		Client: mgr.GetClient(),
+		MissionClient: utils.MissionClient{
+			Client: mgr.GetClient(),
+		},
 		Scheme: mgr.GetScheme(),
 	}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "VirtualMachine")
