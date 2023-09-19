@@ -89,3 +89,29 @@ rules:
   - get
   - patch
   - update
+- apiGroups:
+  - storage.mission-control.apis.io
+  resources:
+  - storagebuckets
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - storage.mission-control.apis.io
+  resources:
+  - storagebuckets/finalizers
+  verbs:
+  - update
+- apiGroups:
+  - storage.mission-control.apis.io
+  resources:
+  - storagebuckets/status
+  verbs:
+  - get
+  - patch
+  - update
