@@ -36,4 +36,13 @@ resources:
   kind: VirtualMachine
   path: github.com/holy-tech/Mission-Control-Operator/api/compute/v1alpha1
   version: v1alpha1
+- api:
+    crdVersion: v1
+    namespaced: true
+  controller: true
+  domain: mission-control.apis.io
+  group: storage
+  kind: StorageBuckets
+  path: github.com/holy-tech/Mission-Control-Operator/api/storage/v1alpha1
+  version: v1alpha1
 version: "3"
