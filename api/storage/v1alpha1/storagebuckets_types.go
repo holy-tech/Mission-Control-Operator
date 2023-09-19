@@ -20,28 +20,22 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-// EDIT THIS FILE!  THIS IS SCAFFOLDING FOR YOU TO OWN!
-// NOTE: json tags are required.  Any new fields you add must have json tags for the fields to be serialized.
-
-// StorageBucketsSpec defines the desired state of StorageBuckets
-type StorageBucketsSpec struct {
-	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
-	// Important: Run "make" to regenerate code after modifying this file
-
-	// Foo is an example field of StorageBuckets. Edit storagebuckets_types.go to remove/update
-	Foo string `json:"foo,omitempty"`
+type ProviderData struct {
+	Name     string `json:"name,omitempty"`
+	Location string `json:"location,omitempty"`
 }
 
-// StorageBucketsStatus defines the observed state of StorageBuckets
+type StorageBucketsSpec struct {
+	MissionRef  string       `json:"missionRef,omitempty"`
+	ForProvider ProviderData `json:"forProvider,omitempty"`
+}
+
 type StorageBucketsStatus struct {
-	// INSERT ADDITIONAL STATUS FIELD - define observed state of cluster
-	// Important: Run "make" to regenerate code after modifying this file
 }
 
 //+kubebuilder:object:root=true
 //+kubebuilder:subresource:status
 
-// StorageBuckets is the Schema for the storagebuckets API
 type StorageBuckets struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
@@ -50,9 +44,7 @@ type StorageBuckets struct {
 	Status StorageBucketsStatus `json:"status,omitempty"`
 }
 
-//+kubebuilder:object:root=true
-
-// StorageBucketsList contains a list of StorageBuckets
+// +kubebuilder:object:root=true
 type StorageBucketsList struct {
 	metav1.TypeMeta `json:",inline"`
 	metav1.ListMeta `json:"metadata,omitempty"`

@@ -53,6 +53,7 @@ func init() {
 	utilruntime.Must(clientgoscheme.AddToScheme(scheme))
 	utilruntime.Must(missionv1alpha1.AddToScheme(scheme))
 	utilruntime.Must(computev1alpha1.AddToScheme(scheme))
+	utilruntime.Must(storagev1alpha1.AddToScheme(scheme))
 
 	crossplaneSchemeBuilder := &controllerscheme.Builder{GroupVersion: apischeme.GroupVersion{Group: "pkg.crossplane.io", Version: "v1"}}
 	crossplaneSchemeBuilder.Register(
@@ -78,7 +79,6 @@ func init() {
 	if err := gcpComputeSchemeBuilder.AddToScheme(scheme); err != nil {
 		os.Exit(1)
 	}
-	utilruntime.Must(storagev1alpha1.AddToScheme(scheme))
 	//+kubebuilder:scaffold:scheme
 }
 
