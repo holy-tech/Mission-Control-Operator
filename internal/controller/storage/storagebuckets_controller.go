@@ -18,13 +18,22 @@ package storage
 
 import (
 	"context"
+	"reflect"
 
+	k8serrors "k8s.io/apimachinery/pkg/api/errors"
+	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
+	types "k8s.io/apimachinery/pkg/types"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
-	"sigs.k8s.io/controller-runtime/pkg/log"
+	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
+	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 
+	cpcommonv1 "github.com/crossplane/crossplane-runtime/apis/common/v1"
+	v1alpha1 "github.com/holy-tech/Mission-Control-Operator/api/mission/v1alpha1"
 	storagev1alpha1 "github.com/holy-tech/Mission-Control-Operator/api/storage/v1alpha1"
+
+	gcpstoragev1 "github.com/upbound/provider-gcp/apis/storage/v1beta1"
 )
 
 // StorageBucketsReconciler reconciles a StorageBuckets object
@@ -37,21 +46,55 @@ type StorageBucketsReconciler struct {
 //+kubebuilder:rbac:groups=storage.mission-control.apis.io,resources=storagebuckets/status,verbs=get;update;patch
 //+kubebuilder:rbac:groups=storage.mission-control.apis.io,resources=storagebuckets/finalizers,verbs=update
 
-// Reconcile is part of the main kubernetes reconciliation loop which aims to
-// move the current state of the cluster closer to the desired state.
-// TODO(user): Modify the Reconcile function to compare the state specified by
-// the StorageBuckets object against the actual cluster state, and then
-// perform operations to make the cluster state reflect the state specified by
-// the user.
-//
-// For more details, check Reconcile and its Result here:
-// - https://pkg.go.dev/sigs.k8s.io/controller-runtime@v0.15.0/pkg/reconcile
 func (r *StorageBucketsReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
-	_ = log.FromContext(ctx)
+	vm := &storagev1alpha1.StorageBuckets{}
+	err := r.Get(ctx, req.NamespacedName, vm)
+	if err != nil {
+		return ctrl.Result{}, err
+	}
 
-	// TODO(user): your logic here
+	mission, err := r.GetMission(ctx, vm.Spec.MissionRef, req.Namespace)
+	result, err := r.ReconcileStorageBucket(ctx, vm, &mission)
+	return result, err
+}
 
-	return ctrl.Result{}, nil
+func (r *StorageBucketsReconciler) GetMission(ctx context.Context, missionName, missionNamespace string) (v1alpha1.Mission, error) {
+	mission := v1alpha1.Mission{}
+	err := r.Get(ctx, types.NamespacedName{Name: missionName, Namespace: missionNamespace}, &mission)
+	return mission, err
+}
+
+func (r *StorageBucketsReconciler) ReconcileStorageBucket(ctx context.Context, bucket *storagev1alpha1.StorageBuckets, mission *v1alpha1.Mission) (ctrl.Result, error) {
+	currentgcpbucket := gcpstoragev1.Bucket{}
+	gcpbucket := gcpstoragev1.Bucket{
+		ObjectMeta: v1.ObjectMeta{
+			Name: bucket.Spec.ForProvider.Name,
+		},
+		Spec: gcpstoragev1.BucketSpec{
+			ForProvider: gcpstoragev1.BucketParameters{
+				Location: &bucket.Spec.ForProvider.Location,
+			},
+			ResourceSpec: cpcommonv1.ResourceSpec{
+				ProviderConfigReference: &cpcommonv1.Reference{
+					Name: "gcloud-provider",
+				},
+			},
+		},
+	}
+	if err := controllerutil.SetControllerReference(bucket, &gcpbucket, r.Scheme); err != nil {
+		return ctrl.Result{}, err
+	}
+	err := r.Get(ctx, types.NamespacedName{Name: bucket.Spec.ForProvider.Name}, &currentgcpbucket)
+	if err != nil {
+		if k8serrors.IsNotFound(err) {
+			return ctrl.Result{}, r.Create(ctx, &gcpbucket)
+		}
+		return ctrl.Result{}, err
+	}
+	if reflect.DeepEqual(currentgcpbucket.Spec, gcpbucket.Spec) {
+		return ctrl.Result{}, nil
+	}
+	return reconcile.Result{}, r.Update(ctx, &currentgcpbucket)
 }
 
 // SetupWithManager sets up the controller with the Manager.
