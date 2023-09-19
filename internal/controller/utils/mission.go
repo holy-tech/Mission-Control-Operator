@@ -18,6 +18,8 @@ package utils
 
 import (
 	"context"
+	"errors"
+	"fmt"
 
 	types "k8s.io/apimachinery/pkg/types"
 	client "sigs.k8s.io/controller-runtime/pkg/client"
@@ -33,4 +35,18 @@ func (r *MissionClient) GetMission(ctx context.Context, missionName, missionName
 	mission := v1alpha1.Mission{}
 	err := r.Get(ctx, types.NamespacedName{Name: missionName, Namespace: missionNamespace}, &mission)
 	return mission, err
+}
+
+func (r *MissionClient) GetMissionKey(ctx context.Context, mission v1alpha1.Mission, provider string) (v1alpha1.MissionKey, error) {
+
+	for _, pkg := range mission.Spec.Packages {
+		missionkey := v1alpha1.MissionKey{}
+		if pkg.Provider != provider {
+			continue
+		}
+		err := r.Get(ctx, types.NamespacedName{Name: pkg.Credentials.Key}, &missionkey)
+		return missionkey, err
+	}
+	msg := fmt.Sprintf("No credentials for provider %s", provider)
+	return v1alpha1.MissionKey{}, errors.New(msg)
 }
