@@ -25,20 +25,20 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 	types "k8s.io/apimachinery/pkg/types"
 	ctrl "sigs.k8s.io/controller-runtime"
-	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 
 	cpcommonv1 "github.com/crossplane/crossplane-runtime/apis/common/v1"
 	v1alpha1 "github.com/holy-tech/Mission-Control-Operator/api/mission/v1alpha1"
 	storagev1alpha1 "github.com/holy-tech/Mission-Control-Operator/api/storage/v1alpha1"
+	utils "github.com/holy-tech/Mission-Control-Operator/internal/controller/utils"
 
 	gcpstoragev1 "github.com/upbound/provider-gcp/apis/storage/v1beta1"
 )
 
 // StorageBucketsReconciler reconciles a StorageBuckets object
 type StorageBucketsReconciler struct {
-	client.Client
+	utils.MissionClient
 	Scheme *runtime.Scheme
 }
 
@@ -56,12 +56,6 @@ func (r *StorageBucketsReconciler) Reconcile(ctx context.Context, req ctrl.Reque
 	mission, err := r.GetMission(ctx, bucket.Spec.MissionRef, req.Namespace)
 	result, err := r.ReconcileStorageBucket(ctx, bucket, &mission)
 	return result, err
-}
-
-func (r *StorageBucketsReconciler) GetMission(ctx context.Context, missionName, missionNamespace string) (v1alpha1.Mission, error) {
-	mission := v1alpha1.Mission{}
-	err := r.Get(ctx, types.NamespacedName{Name: missionName, Namespace: missionNamespace}, &mission)
-	return mission, err
 }
 
 func (r *StorageBucketsReconciler) ReconcileStorageBucket(ctx context.Context, bucket *storagev1alpha1.StorageBuckets, mission *v1alpha1.Mission) (ctrl.Result, error) {
