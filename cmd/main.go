@@ -33,6 +33,7 @@ import (
 
 	cpv1 "github.com/crossplane/crossplane/apis/pkg/v1"
 	gcpcomputev1 "github.com/upbound/provider-gcp/apis/compute/v1beta1"
+	gcpstoragev1 "github.com/upbound/provider-gcp/apis/storage/v1beta1"
 	gcpv1 "github.com/upbound/provider-gcp/apis/v1beta1"
 
 	computev1alpha1 "github.com/holy-tech/Mission-Control-Operator/api/compute/v1alpha1"
@@ -70,6 +71,11 @@ func init() {
 		&gcpcomputev1.Instance{},
 		&gcpcomputev1.InstanceList{},
 	)
+	gcpStorageSchemeBuilder := &controllerscheme.Builder{GroupVersion: apischeme.GroupVersion{Group: "storage.gcp.upbound.io", Version: "v1beta1"}}
+	gcpStorageSchemeBuilder.Register(
+		&gcpstoragev1.Bucket{},
+		&gcpstoragev1.BucketList{},
+	)
 	if err := crossplaneSchemeBuilder.AddToScheme(scheme); err != nil {
 		os.Exit(1)
 	}
@@ -77,6 +83,9 @@ func init() {
 		os.Exit(1)
 	}
 	if err := gcpComputeSchemeBuilder.AddToScheme(scheme); err != nil {
+		os.Exit(1)
+	}
+	if err := gcpStorageSchemeBuilder.AddToScheme(scheme); err != nil {
 		os.Exit(1)
 	}
 	//+kubebuilder:scaffold:scheme
