@@ -33,12 +33,15 @@ import (
 
 	cpv1 "github.com/crossplane/crossplane/apis/pkg/v1"
 	gcpcomputev1 "github.com/upbound/provider-gcp/apis/compute/v1beta1"
+	gcpstoragev1 "github.com/upbound/provider-gcp/apis/storage/v1beta1"
 	gcpv1 "github.com/upbound/provider-gcp/apis/v1beta1"
 
 	computev1alpha1 "github.com/holy-tech/Mission-Control-Operator/api/compute/v1alpha1"
 	missionv1alpha1 "github.com/holy-tech/Mission-Control-Operator/api/mission/v1alpha1"
+	storagev1alpha1 "github.com/holy-tech/Mission-Control-Operator/api/storage/v1alpha1"
 	computecontroller "github.com/holy-tech/Mission-Control-Operator/internal/controller/compute"
 	missioncontroler "github.com/holy-tech/Mission-Control-Operator/internal/controller/mission"
+	storagecontroller "github.com/holy-tech/Mission-Control-Operator/internal/controller/storage"
 	//+kubebuilder:scaffold:imports
 )
 
@@ -51,6 +54,7 @@ func init() {
 	utilruntime.Must(clientgoscheme.AddToScheme(scheme))
 	utilruntime.Must(missionv1alpha1.AddToScheme(scheme))
 	utilruntime.Must(computev1alpha1.AddToScheme(scheme))
+	utilruntime.Must(storagev1alpha1.AddToScheme(scheme))
 
 	crossplaneSchemeBuilder := &controllerscheme.Builder{GroupVersion: apischeme.GroupVersion{Group: "pkg.crossplane.io", Version: "v1"}}
 	crossplaneSchemeBuilder.Register(
@@ -67,6 +71,11 @@ func init() {
 		&gcpcomputev1.Instance{},
 		&gcpcomputev1.InstanceList{},
 	)
+	gcpStorageSchemeBuilder := &controllerscheme.Builder{GroupVersion: apischeme.GroupVersion{Group: "storage.gcp.upbound.io", Version: "v1beta1"}}
+	gcpStorageSchemeBuilder.Register(
+		&gcpstoragev1.Bucket{},
+		&gcpstoragev1.BucketList{},
+	)
 	if err := crossplaneSchemeBuilder.AddToScheme(scheme); err != nil {
 		os.Exit(1)
 	}
@@ -74,6 +83,9 @@ func init() {
 		os.Exit(1)
 	}
 	if err := gcpComputeSchemeBuilder.AddToScheme(scheme); err != nil {
+		os.Exit(1)
+	}
+	if err := gcpStorageSchemeBuilder.AddToScheme(scheme); err != nil {
 		os.Exit(1)
 	}
 	//+kubebuilder:scaffold:scheme
@@ -127,6 +139,13 @@ func main() {
 		Scheme: mgr.GetScheme(),
 	}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "VirtualMachine")
+		os.Exit(1)
+	}
+	if err = (&storagecontroller.StorageBucketsReconciler{
+		Client: mgr.GetClient(),
+		Scheme: mgr.GetScheme(),
+	}).SetupWithManager(mgr); err != nil {
+		setupLog.Error(err, "unable to create controller", "controller", "StorageBuckets")
 		os.Exit(1)
 	}
 	//+kubebuilder:scaffold:builder
