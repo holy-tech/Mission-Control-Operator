@@ -189,7 +189,9 @@ func (r *MissionReconciler) ReconcileProviderConfig(ctx context.Context, pkg *mi
 			},
 		},
 	}
-	controllerutil.SetControllerReference(mission, expectedProviderConfig, r.Scheme)
+	if err := controllerutil.SetControllerReference(mission, expectedProviderConfig, r.Scheme); err != nil {
+		return err
+	}
 	if err := r.Get(ctx, types.NamespacedName{Name: providerName}, providerConfig); err != nil {
 		if k8serrors.IsNotFound(err) {
 			return r.Create(ctx, expectedProviderConfig)
