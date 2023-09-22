@@ -1,0 +1,28 @@
+version: 2.1
+orbs:
+  go: circleci/go@1.8.0
+jobs:
+  build:
+    executor:
+      name: go/default
+      tag: "1.21"
+    steps:
+      - checkout
+      - go/load-cache
+      - go/mod-download
+      - run: make test
+      - go/save-cache
+  lint:
+    docker:
+      - image: golangci/golangci-lint:v1.54.1
+    steps:
+      - checkout
+      - run: make ci-lint | tee golanci-report.xml
+      - store_artifacts:
+          path: golanci-report.xml
+
+workflows:
+  build_lint_test:
+    jobs:
+      - build
+      - lint
