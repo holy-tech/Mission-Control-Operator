@@ -16,12 +16,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     - Compute Engine Instances
     - Cloud Storage Buckets
 
+### Changed
+- CICD pipeline migrated from CircleCI to Github Actions
+
 ## [0.2.0] - 09-09-2023
 ### Added
 - Changelog for release announcements.
 - MissionKey CRD for storing cloud provider credentials
 - Issue templates for testing and documentation.
-- CICD pipeline migrated from CircleCI to Github Actions
 
 ### Changed
 - Fixed CICD linting and added artifacts for outputs.
