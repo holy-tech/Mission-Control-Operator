@@ -12,6 +12,32 @@ rules:
   - create
   - patch
 - apiGroups:
+  - compute.mission-control.apis.io
+  resources:
+  - virtualmachines
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - compute.mission-control.apis.io
+  resources:
+  - virtualmachines/finalizers
+  verbs:
+  - update
+- apiGroups:
+  - compute.mission-control.apis.io
+  resources:
+  - virtualmachines/status
+  verbs:
+  - get
+  - patch
+  - update
+- apiGroups:
   - mission.mission-control.apis.io
   resources:
   - missionkeys
@@ -59,6 +85,32 @@ rules:
   - mission.mission-control.apis.io
   resources:
   - missions/status
+  verbs:
+  - get
+  - patch
+  - update
+- apiGroups:
+  - storage.mission-control.apis.io
+  resources:
+  - storagebuckets
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - storage.mission-control.apis.io
+  resources:
+  - storagebuckets/finalizers
+  verbs:
+  - update
+- apiGroups:
+  - storage.mission-control.apis.io
+  resources:
+  - storagebuckets/status
   verbs:
   - get
   - patch

@@ -6,6 +6,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.1] - 09-23-2023
+### Added
+- Enabled multi-group settings and changed structure as specified by kubebuilder.
+- Unit tests for common utility functions and mission related methods
+- Written documentation for developers in docs/ folder.
+- Generic resources:
+    - Virtual Machines
+    - Storage Buckets
+- GCP resources:
+    - Compute Engine Instances
+    - Cloud Storage Buckets
+
+### Changed
+- CICD pipeline migrated from CircleCI to Github Actions
+
 ## [0.2.0] - 09-09-2023
 ### Added
 - Changelog for release announcements.

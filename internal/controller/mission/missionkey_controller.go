@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package controller
+package missioncontroller
 
 import (
 	"context"
@@ -30,7 +30,7 @@ import (
 	controllerutil "sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 	reconcile "sigs.k8s.io/controller-runtime/pkg/reconcile"
 
-	missionv1alpha1 "github.com/holy-tech/Mission-Control-Operator/api/v1alpha1"
+	missionv1alpha1 "github.com/holy-tech/Mission-Control-Operator/api/mission/v1alpha1"
 	utils "github.com/holy-tech/Mission-Control-Operator/internal/controller/utils"
 )
 
@@ -52,7 +52,7 @@ func (r *MissionKeyReconciler) Reconcile(ctx context.Context, req ctrl.Request) 
 
 	// Check if secret and service account still exists if not create.
 	secret := v1.Secret{
-		Data: map[string][]byte{"keyfile": key.Spec.Data},
+		Data: map[string][]byte{"creds": key.Spec.Data},
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      req.Name,
 			Namespace: req.Namespace,
@@ -75,8 +75,8 @@ func (r *MissionKeyReconciler) Reconcile(ctx context.Context, req ctrl.Request) 
 			return ctrl.Result{}, r.Create(ctx, &secret)
 		}
 		return ctrl.Result{}, err
-	} else if !reflect.DeepEqual(key.Spec.Data, secret.Data["keyfile"]) {
-		secret.Data = map[string][]byte{"keyfile": key.Spec.Data}
+	} else if !reflect.DeepEqual(key.Spec.Data, secret.Data["creds"]) {
+		secret.Data = map[string][]byte{"creds": key.Spec.Data}
 		return ctrl.Result{}, r.Update(ctx, &secret)
 	}
 	if err = r.Get(ctx, req.NamespacedName, &sa); err != nil {
@@ -88,7 +88,7 @@ func (r *MissionKeyReconciler) Reconcile(ctx context.Context, req ctrl.Request) 
 
 	keyFinalizer := key.Spec.Name
 	if key.ObjectMeta.DeletionTimestamp.IsZero() {
-		if !utils.ContainsString(key.ObjectMeta.Finalizers, keyFinalizer) {
+		if !utils.Contains(key.ObjectMeta.Finalizers, keyFinalizer) {
 			key.ObjectMeta.Finalizers = append(key.ObjectMeta.Finalizers, keyFinalizer)
 			if err := r.Update(context.Background(), key); err != nil {
 				return reconcile.Result{}, err

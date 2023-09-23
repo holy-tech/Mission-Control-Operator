@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package controller
+package missioncontroller
 
 import (
 	"context"
@@ -41,7 +41,7 @@ import (
 	cpv1 "github.com/crossplane/crossplane/apis/pkg/v1"
 	gcpv1 "github.com/upbound/provider-gcp/apis/v1beta1"
 
-	missionv1alpha1 "github.com/holy-tech/Mission-Control-Operator/api/v1alpha1"
+	missionv1alpha1 "github.com/holy-tech/Mission-Control-Operator/api/mission/v1alpha1"
 	utils "github.com/holy-tech/Mission-Control-Operator/internal/controller/utils"
 )
 
@@ -77,7 +77,7 @@ func (r *MissionReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ct
 
 	// Check that the providers being used in specified mission are installed in the cluster and are supported
 	for _, p := range mission.Spec.Packages {
-		if !utils.ContainsString(utils.GetSupportedProviders(), p.Provider) {
+		if !utils.Contains(utils.GetSupportedProviders(), p.Provider) {
 			message := fmt.Sprintf("Provider %s is not supported, please use one of %v", p.Provider, utils.GetSupportedProviders())
 			err := errors.New(message)
 			return ctrl.Result{}, err
@@ -189,7 +189,9 @@ func (r *MissionReconciler) ReconcileProviderConfig(ctx context.Context, pkg *mi
 			},
 		},
 	}
-	controllerutil.SetControllerReference(mission, expectedProviderConfig, r.Scheme)
+	if err := controllerutil.SetControllerReference(mission, expectedProviderConfig, r.Scheme); err != nil {
+		return err
+	}
 	if err := r.Get(ctx, types.NamespacedName{Name: providerName}, providerConfig); err != nil {
 		if k8serrors.IsNotFound(err) {
 			return r.Create(ctx, expectedProviderConfig)

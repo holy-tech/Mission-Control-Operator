@@ -1,0 +1,31 @@
+# permissions for end users to edit storagebuckets.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  labels:
+    app.kubernetes.io/name: clusterrole
+    app.kubernetes.io/instance: storagebuckets-editor-role
+    app.kubernetes.io/component: rbac
+    app.kubernetes.io/created-by: mission-control-operator
+    app.kubernetes.io/part-of: mission-control-operator
+    app.kubernetes.io/managed-by: kustomize
+  name: storagebuckets-editor-role
+rules:
+- apiGroups:
+  - storage.mission-control.apis.io
+  resources:
+  - storagebuckets
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - storage.mission-control.apis.io
+  resources:
+  - storagebuckets/status
+  verbs:
+  - get
