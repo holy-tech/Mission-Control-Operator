@@ -31,7 +31,7 @@ func TestGetValues(t *testing.T) {
 		t.Fail()
 	}
 	result = GetValues(map[string]string{"a": "B", "b": "C"})
-	if reflect.DeepEqual(result, []string{"a", "b"}) {
+	if !reflect.DeepEqual(result, []string{"a", "b"}) {
 		t.Fail()
 	}
 }
