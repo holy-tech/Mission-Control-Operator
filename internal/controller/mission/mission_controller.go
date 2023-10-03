@@ -52,8 +52,8 @@ type MissionReconciler struct {
 }
 
 var ProviderMapping = map[string]string{
-	"GCP":   "provider-gcp",
-	"AWS":   "",
+	"GCP":   "provider-gcp-family",
+	"AWS":   "provider-aws-family",
 	"AZURE": "",
 }
 
