@@ -51,17 +51,27 @@ var (
 	setupLog = ctrl.Log.WithName("setup")
 )
 
+func buildScheme(scheme *runtime.Scheme, Group, Version string, Objects ...runtime.Object) {
+	SchemeBuilder := &controllerscheme.Builder{
+		GroupVersion: apischeme.GroupVersion{
+			Group:   Group,
+			Version: Version,
+		},
+	}
+	SchemeBuilder.Register(Objects...)
+	if err := SchemeBuilder.AddToScheme(scheme); err != nil {
+		os.Exit(1)
+	}
+}
+
 func init() {
 	utilruntime.Must(clientgoscheme.AddToScheme(scheme))
 	utilruntime.Must(missionv1alpha1.AddToScheme(scheme))
 	utilruntime.Must(computev1alpha1.AddToScheme(scheme))
 	utilruntime.Must(storagev1alpha1.AddToScheme(scheme))
 
-	crossplaneSchemeBuilder := &controllerscheme.Builder{GroupVersion: apischeme.GroupVersion{Group: "pkg.crossplane.io", Version: "v1"}}
-	crossplaneSchemeBuilder.Register(
-		&cpv1.Provider{},
-		&cpv1.ProviderList{},
-	)
+	buildScheme(scheme, "pkg.crossplane.io", "v1", &cpv1.Provider{}, &cpv1.ProviderList{})
+
 	gcpSchemeBuilder := &controllerscheme.Builder{GroupVersion: apischeme.GroupVersion{Group: "gcp.upbound.io", Version: "v1beta1"}}
 	gcpSchemeBuilder.Register(
 		&gcpv1.ProviderConfig{},
@@ -77,9 +87,6 @@ func init() {
 		&gcpstoragev1.Bucket{},
 		&gcpstoragev1.BucketList{},
 	)
-	if err := crossplaneSchemeBuilder.AddToScheme(scheme); err != nil {
-		os.Exit(1)
-	}
 	if err := gcpSchemeBuilder.AddToScheme(scheme); err != nil {
 		os.Exit(1)
 	}
