@@ -71,31 +71,9 @@ func init() {
 	utilruntime.Must(storagev1alpha1.AddToScheme(scheme))
 
 	buildScheme(scheme, "pkg.crossplane.io", "v1", &cpv1.Provider{}, &cpv1.ProviderList{})
-
-	gcpSchemeBuilder := &controllerscheme.Builder{GroupVersion: apischeme.GroupVersion{Group: "gcp.upbound.io", Version: "v1beta1"}}
-	gcpSchemeBuilder.Register(
-		&gcpv1.ProviderConfig{},
-		&gcpv1.ProviderConfigList{},
-	)
-	gcpComputeSchemeBuilder := &controllerscheme.Builder{GroupVersion: apischeme.GroupVersion{Group: "compute.gcp.upbound.io", Version: "v1beta1"}}
-	gcpComputeSchemeBuilder.Register(
-		&gcpcomputev1.Instance{},
-		&gcpcomputev1.InstanceList{},
-	)
-	gcpStorageSchemeBuilder := &controllerscheme.Builder{GroupVersion: apischeme.GroupVersion{Group: "storage.gcp.upbound.io", Version: "v1beta1"}}
-	gcpStorageSchemeBuilder.Register(
-		&gcpstoragev1.Bucket{},
-		&gcpstoragev1.BucketList{},
-	)
-	if err := gcpSchemeBuilder.AddToScheme(scheme); err != nil {
-		os.Exit(1)
-	}
-	if err := gcpComputeSchemeBuilder.AddToScheme(scheme); err != nil {
-		os.Exit(1)
-	}
-	if err := gcpStorageSchemeBuilder.AddToScheme(scheme); err != nil {
-		os.Exit(1)
-	}
+	buildScheme(scheme, "gcp.upbound.io", "v1beta1", &gcpv1.ProviderConfig{}, &gcpv1.ProviderConfigList{})
+	buildScheme(scheme, "compute.gcp.upbound.io", "v1beta1", &gcpcomputev1.Instance{}, &gcpcomputev1.InstanceList{})
+	buildScheme(scheme, "storage.gcp.upbound.io", "v1beta1", &gcpstoragev1.Bucket{}, &gcpstoragev1.BucketList{})
 	//+kubebuilder:scaffold:scheme
 }
 
