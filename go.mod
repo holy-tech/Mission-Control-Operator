@@ -7,11 +7,11 @@ require (
 	github.com/crossplane/crossplane-runtime v1.14.0-rc.0.0.20230912122805-43c9ceeb2071
 	github.com/onsi/ginkgo/v2 v2.12.0
 	github.com/onsi/gomega v1.27.10
-	github.com/upbound/provider-gcp v0.36.0
-	k8s.io/api v0.28.1
+	github.com/upbound/provider-gcp v0.37.0
+	k8s.io/api v0.28.2
 	k8s.io/apiextensions-apiserver v0.28.1
-	k8s.io/apimachinery v0.28.1
-	k8s.io/client-go v0.28.1
+	k8s.io/apimachinery v0.28.2
+	k8s.io/client-go v0.28.2
 	sigs.k8s.io/controller-runtime v0.16.1
 )
 
