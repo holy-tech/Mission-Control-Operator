@@ -80,6 +80,7 @@ func (r *MissionReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ct
 		if !utils.Contains(utils.GetSupportedProviders(), p.Provider) {
 			message := fmt.Sprintf("Provider %s is not supported, please use one of %v", p.Provider, utils.GetSupportedProviders())
 			err := errors.New(message)
+			r.Recorder.Event(mission, "Warning", "Failed", message)
 			return ctrl.Result{}, err
 		}
 		err := r.ConfirmProvider(ctx, mission, p.Provider)
