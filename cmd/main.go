@@ -32,16 +32,13 @@ import (
 	controllerscheme "sigs.k8s.io/controller-runtime/pkg/scheme"
 
 	cpv1 "github.com/crossplane/crossplane/apis/pkg/v1"
-	utils "github.com/holy-tech/Mission-Control-Operator/internal/controller/utils"
 	awsv1 "github.com/upbound/provider-aws/apis/v1beta1"
 	gcpv1 "github.com/upbound/provider-gcp/apis/v1beta1"
 
 	computev1alpha1 "github.com/holy-tech/Mission-Control-Operator/api/compute/v1alpha1"
 	missionv1alpha1 "github.com/holy-tech/Mission-Control-Operator/api/mission/v1alpha1"
 	storagev1alpha1 "github.com/holy-tech/Mission-Control-Operator/api/storage/v1alpha1"
-	computecontroller "github.com/holy-tech/Mission-Control-Operator/internal/controller/compute"
 	missioncontroler "github.com/holy-tech/Mission-Control-Operator/internal/controller/mission"
-	storagecontroller "github.com/holy-tech/Mission-Control-Operator/internal/controller/storage"
 	//+kubebuilder:scaffold:imports
 )
 
@@ -118,24 +115,24 @@ func main() {
 		setupLog.Error(err, "unable to create controller", "controller", "MissionKey")
 		os.Exit(1)
 	}
-	if err = (&computecontroller.VirtualMachineReconciler{
-		MissionClient: utils.MissionClient{
-			Client: mgr.GetClient(),
-		},
-		Scheme: mgr.GetScheme(),
-	}).SetupWithManager(mgr); err != nil {
-		setupLog.Error(err, "unable to create controller", "controller", "VirtualMachine")
-		os.Exit(1)
-	}
-	if err = (&storagecontroller.StorageBucketsReconciler{
-		MissionClient: utils.MissionClient{
-			Client: mgr.GetClient(),
-		},
-		Scheme: mgr.GetScheme(),
-	}).SetupWithManager(mgr); err != nil {
-		setupLog.Error(err, "unable to create controller", "controller", "StorageBuckets")
-		os.Exit(1)
-	}
+	// if err = (&computecontroller.VirtualMachineReconciler{
+	// 	MissionClient: utils.MissionClient{
+	// 		Client: mgr.GetClient(),
+	// 	},
+	// 	Scheme: mgr.GetScheme(),
+	// }).SetupWithManager(mgr); err != nil {
+	// 	setupLog.Error(err, "unable to create controller", "controller", "VirtualMachine")
+	// 	os.Exit(1)
+	// }
+	// if err = (&storagecontroller.StorageBucketsReconciler{
+	// 	MissionClient: utils.MissionClient{
+	// 		Client: mgr.GetClient(),
+	// 	},
+	// 	Scheme: mgr.GetScheme(),
+	// }).SetupWithManager(mgr); err != nil {
+	// 	setupLog.Error(err, "unable to create controller", "controller", "StorageBuckets")
+	// 	os.Exit(1)
+	// }
 	//+kubebuilder:scaffold:builder
 
 	if err := mgr.AddHealthzCheck("healthz", healthz.Ping); err != nil {
