@@ -79,7 +79,7 @@ require (
 	github.com/spf13/afero v1.9.5 // indirect
 	github.com/spf13/pflag v1.0.5 // indirect
 	github.com/tmccombs/hcl2json v0.3.3 // indirect
-	github.com/upbound/provider-aws v0.41.0 // indirect
+	github.com/upbound/provider-aws v0.41.0 // direct
 	github.com/upbound/upjet v0.11.0-rc.0.0.20230927185952-cc55f3952474 // indirect
 	github.com/vmihailenco/msgpack v4.0.4+incompatible // indirect
 	github.com/vmihailenco/msgpack/v4 v4.3.12 // indirect
