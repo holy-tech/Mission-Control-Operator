@@ -20,13 +20,10 @@ import (
 	"context"
 
 	v1 "k8s.io/api/core/v1"
-	k8serrors "k8s.io/apimachinery/pkg/api/errors"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	runtime "k8s.io/apimachinery/pkg/runtime"
 
 	ctrl "sigs.k8s.io/controller-runtime"
 	client "sigs.k8s.io/controller-runtime/pkg/client"
-	controllerutil "sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 	reconcile "sigs.k8s.io/controller-runtime/pkg/reconcile"
 
 	missionv1alpha1 "github.com/holy-tech/Mission-Control-Operator/api/mission/v1alpha1"
@@ -52,21 +49,7 @@ func (r *MissionKeyReconciler) Reconcile(ctx context.Context, req ctrl.Request) 
 	if err := r.CreateSecret(ctx, req, key); err != nil {
 		return ctrl.Result{}, err
 	}
-
-	// Check if secret and service account still exists if not create.
-	sa := v1.ServiceAccount{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      req.Name,
-			Namespace: req.Namespace,
-		},
-	}
-	if err := controllerutil.SetControllerReference(key, &sa, r.Scheme); err != nil {
-		return ctrl.Result{}, err
-	}
-	if err = r.Get(ctx, req.NamespacedName, &sa); err != nil {
-		if k8serrors.IsNotFound(err) {
-			return ctrl.Result{}, r.Create(ctx, &sa)
-		}
+	if err := r.CreateServiceAccount(ctx, req, key); err != nil {
 		return ctrl.Result{}, err
 	}
 
