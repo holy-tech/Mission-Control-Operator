@@ -40,6 +40,7 @@ import (
 	missionv1alpha1 "github.com/holy-tech/Mission-Control-Operator/api/mission/v1alpha1"
 	storagev1alpha1 "github.com/holy-tech/Mission-Control-Operator/api/storage/v1alpha1"
 	missioncontroler "github.com/holy-tech/Mission-Control-Operator/internal/controller/mission"
+	missionkeycontroler "github.com/holy-tech/Mission-Control-Operator/internal/controller/missionkey"
 	//+kubebuilder:scaffold:imports
 )
 
@@ -110,7 +111,7 @@ func main() {
 		setupLog.Error(err, "unable to create controller", "controller", "Mission")
 		os.Exit(1)
 	}
-	if err = (&missioncontroler.MissionKeyReconciler{
+	if err = (&missionkeycontroler.MissionKeyReconciler{
 		Client: mgr.GetClient(),
 		Scheme: mgr.GetScheme(),
 	}).SetupWithManager(mgr); err != nil {
