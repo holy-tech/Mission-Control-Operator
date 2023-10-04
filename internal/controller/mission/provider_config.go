@@ -35,7 +35,18 @@ import (
 	gcpv1 "github.com/upbound/provider-gcp/apis/v1beta1"
 )
 
-func (r *MissionReconciler) ReconcileProviderConfig(ctx context.Context, pkg *missionv1alpha1.PackageConfig, mission *missionv1alpha1.Mission) error {
+func (r *MissionReconciler) ReconcileProviderConfigs(ctx context.Context, mission *missionv1alpha1.Mission) error {
+	for _, pkg := range mission.Spec.Packages {
+		err := r.ReconcileProviderConfigByPackage(ctx, mission, &pkg)
+		if err != nil {
+			r.Recorder.Event(mission, "Warning", "ProviderConfig not created", "Could not correctly create ProviderConfig resource.")
+			return err
+		}
+	}
+	return nil
+}
+
+func (r *MissionReconciler) ReconcileProviderConfigByPackage(ctx context.Context, mission *missionv1alpha1.Mission, pkg *missionv1alpha1.PackageConfig) error {
 	if pkg.Provider == "GCP" {
 		return r.ReconcileProviderConfigGCP(ctx, pkg, mission)
 	}

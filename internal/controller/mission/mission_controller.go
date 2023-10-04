@@ -74,16 +74,11 @@ func (r *MissionReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ct
 	if err := r.ConfirmProvider(ctx, mission); err != nil {
 		return ctrl.Result{}, err
 	}
-
 	r.Recorder.Event(mission, "Normal", "Success", "Mission correctly connected to Crossplane")
 
 	// Create ProviderConfig that resources will reference.
-	for _, pkg := range mission.Spec.Packages {
-		err = r.ReconcileProviderConfig(ctx, &pkg, mission)
-		if err != nil {
-			r.Recorder.Event(mission, "Warning", "ProviderConfig not created", "Could not correctly create ProviderConfig resource.")
-			return ctrl.Result{}, err
-		}
+	if err := r.ReconcileProviderConfigs(ctx, mission); err != nil {
+		return ctrl.Result{}, err
 	}
 	r.Recorder.Event(mission, "Normal", "Success", "ProviderConfig correctly created")
 
