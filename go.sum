@@ -242,6 +242,8 @@ github.com/stretchr/testify v1.8.2 h1:+h33VjcLVPDHtOdpUCuF+7gSuG3yGIftsP1YvFihtJ
 github.com/stretchr/testify v1.8.2/go.mod h1:w2LPCIKwWwSfY2zedu0+kehJoqGctiVI29o6fzry7u4=
 github.com/upbound/provider-aws v0.41.0 h1:CjwF0fMPyWVcgg2C3yJC1zJ/b8ZTOynkMczV2YHMN2Q=
 github.com/upbound/provider-aws v0.41.0/go.mod h1:ELpaKjS/sUFrRMcjktMHAhTSyMzoUCDsGbHdtmuiw1I=
+github.com/upbound/provider-azure v0.37.1 h1:/oLAZkcubqNBBiVbTx3qyNynAcnV2zE6+tQHi8LfWZU=
+github.com/upbound/provider-azure v0.37.1/go.mod h1:w0D9DOZmv0IONn8n1m6lUWoyTBxD4T3kbkBk5B9Nopo=
 github.com/upbound/provider-gcp v0.37.0 h1:+D3oEHykksFHWO/Wwkx8nep5Zw9d/bm53M7kkzRZ2ho=
 github.com/upbound/provider-gcp v0.37.0/go.mod h1:QY10wHH4CiDeL8KfVAQPnohNiWed5CWDXsEXxbfoBtU=
 github.com/yuin/goldmark v1.1.25/go.mod h1:3hX8gzYuyVAZsxl0MRgGTJEmQBFcNTphYh9decYSb74=

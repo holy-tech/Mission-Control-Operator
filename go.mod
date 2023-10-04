@@ -8,6 +8,7 @@ require (
 	github.com/onsi/ginkgo/v2 v2.12.0
 	github.com/onsi/gomega v1.27.10
 	github.com/upbound/provider-aws v0.41.0
+	github.com/upbound/provider-azure v0.37.1
 	github.com/upbound/provider-gcp v0.37.0
 	k8s.io/api v0.28.2
 	k8s.io/apiextensions-apiserver v0.28.1
