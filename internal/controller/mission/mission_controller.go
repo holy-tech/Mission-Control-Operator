@@ -169,6 +169,12 @@ func (r *MissionReconciler) ReconcilePackageStatus(ctx context.Context, mission 
 }
 
 func (r *MissionReconciler) ReconcileProviderConfig(ctx context.Context, pkg *missionv1alpha1.PackageConfig, mission *missionv1alpha1.Mission) error {
+	if pkg.Provider == "GCP" {
+		return r.ReconcileProviderConfigGCP(ctx, pkg, mission)
+	}
+}
+
+func (r *MissionReconciler) ReconcileProviderConfigGCP(ctx context.Context, pkg *missionv1alpha1.PackageConfig, mission *missionv1alpha1.Mission) error {
 	providerName := mission.Name + "-" + strings.ToLower(pkg.Provider)
 	providerConfig := &gcpv1.ProviderConfig{}
 	expectedProviderConfig := &gcpv1.ProviderConfig{
