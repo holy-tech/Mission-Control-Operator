@@ -116,33 +116,6 @@ func (r *MissionReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ct
 	return ctrl.Result{}, nil
 }
 
-func (r *MissionReconciler) ConfirmProvider(ctx context.Context, mission *missionv1alpha1.Mission, providerName string) error {
-	if utils.Contains(utils.GetValues(ProviderMapping), providerName) {
-		k8providerName := ProviderMapping[providerName]
-		p, err := r.GetProvider(ctx, k8providerName)
-		if err != nil {
-			message := fmt.Sprintf("Could not find provider %s, ensure provider is installed", k8providerName)
-			r.Recorder.Event(mission, "Warning", "Provider Not Installed", message)
-			return errors.New(message)
-		}
-		err = r.ReconcilePackageStatus(ctx, mission, p)
-		if err != nil {
-			return err
-		}
-	} else {
-		message := fmt.Sprintf("Provider not allowed please choose of the following (%v)", utils.GetValues(ProviderMapping))
-		r.Recorder.Event(mission, "Warning", "Provider Not Known", message)
-		return errors.New(message)
-	}
-	return nil
-}
-
-func (r *MissionReconciler) GetProvider(ctx context.Context, providerName string) (*cpv1.Provider, error) {
-	p := &cpv1.Provider{}
-	err := r.Get(ctx, types.NamespacedName{Name: providerName}, p)
-	return p, err
-}
-
 func (r *MissionReconciler) ConfirmCRD(ctx context.Context, crdNameVersion string) (*apiextensionsv1.CustomResourceDefinition, error) {
 	clientConfig, _ := clientcmd.BuildConfigFromFlags("", os.Getenv("HOME")+"/.kube/config")
 	clientset, _ := apiextensionsclientset.NewForConfig(clientConfig)
