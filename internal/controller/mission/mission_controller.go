@@ -19,15 +19,12 @@ package missioncontroller
 import (
 	"context"
 	"errors"
-	"fmt"
 	"os"
 
 	apiextensionsv1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
 	apiextensionsclientset "k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset"
-	k8serrors "k8s.io/apimachinery/pkg/api/errors"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	runtime "k8s.io/apimachinery/pkg/runtime"
-	types "k8s.io/apimachinery/pkg/types"
 	clientcmd "k8s.io/client-go/tools/clientcmd"
 	record "k8s.io/client-go/tools/record"
 
@@ -59,17 +56,14 @@ var ProviderMapping = map[string]string{
 
 func (r *MissionReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	mission := &missionv1alpha1.Mission{}
-	err := r.Get(ctx, req.NamespacedName, mission)
-	if err != nil {
+	if err := r.Get(ctx, req.NamespacedName, mission); err != nil {
 		return ctrl.Result{}, err
 	}
-
 	// Confirm that crossplane is installed in the kubernetes cluster
 	if _, err := r.ConfirmCRD(ctx, "providers.pkg.crossplane.io"); err != nil {
 		r.Recorder.Event(mission, "Warning", "Failed", "Crossplane installation not found")
 		return ctrl.Result{}, errors.New("could not find crossplane CRD \"Provider\"")
 	}
-
 	// Check that the providers being used in specified mission are installed in the cluster and are supported
 	if err := r.ConfirmProvider(ctx, mission); err != nil {
 		return ctrl.Result{}, err
@@ -83,20 +77,8 @@ func (r *MissionReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ct
 	r.Recorder.Event(mission, "Normal", "Success", "ProviderConfig correctly created")
 
 	// Confirm that mission key exists, if not create warning.
-	for _, pkg := range mission.Spec.Packages {
-		key := &missionv1alpha1.MissionKey{}
-		err := r.Get(ctx, types.NamespacedName{Name: pkg.Credentials.Name, Namespace: pkg.Credentials.Namespace}, key)
-		if err != nil {
-			if !k8serrors.IsNotFound(err) {
-				r.Recorder.Event(mission, "Warning", "Error looking for MissionKey", "Unexpected error while looking for MissionKey.")
-				return ctrl.Result{}, err
-			}
-			message := fmt.Sprintf("Provider %s: Please ensure that MissionKey \"%s\" exists in namespace \"%s\".", pkg.Provider, pkg.Credentials.Name, pkg.Credentials.Namespace)
-			r.Recorder.Event(mission, "Warning", "MissionKey not found", message)
-		} else {
-			message := fmt.Sprintf("MissionKey \"%s\" correctly linked in Namespace \"%s\".", pkg.Credentials.Name, pkg.Credentials.Namespace)
-			r.Recorder.Event(mission, "Normal", "Success", message)
-		}
+	if err := r.ConfirmMissionKeys(ctx, mission); err != nil {
+		return ctrl.Result{}, err
 	}
 	return ctrl.Result{}, nil
 }
