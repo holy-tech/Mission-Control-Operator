@@ -33,6 +33,7 @@ import (
 
 	cpv1 "github.com/crossplane/crossplane/apis/pkg/v1"
 	awsv1 "github.com/upbound/provider-aws/apis/v1beta1"
+	azrv1 "github.com/upbound/provider-azure/apis/v1beta1"
 	gcpv1 "github.com/upbound/provider-gcp/apis/v1beta1"
 
 	computev1alpha1 "github.com/holy-tech/Mission-Control-Operator/api/compute/v1alpha1"
@@ -69,6 +70,7 @@ func init() {
 	buildScheme(scheme, "pkg.crossplane.io", "v1", &cpv1.Provider{}, &cpv1.ProviderList{})
 	buildScheme(scheme, "gcp.upbound.io", "v1beta1", &gcpv1.ProviderConfig{}, &gcpv1.ProviderConfigList{})
 	buildScheme(scheme, "aws.upbound.io", "v1beta1", &awsv1.ProviderConfig{}, &awsv1.ProviderConfigList{})
+	buildScheme(scheme, "azure.upbound.io", "v1beta1", &azrv1.ProviderConfig{}, &azrv1.ProviderConfigList{})
 	//+kubebuilder:scaffold:scheme
 }
 
