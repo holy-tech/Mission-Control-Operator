@@ -18,7 +18,6 @@ package missionkeycontroller
 
 import (
 	"context"
-	"reflect"
 
 	v1 "k8s.io/api/core/v1"
 	k8serrors "k8s.io/apimachinery/pkg/api/errors"
@@ -50,34 +49,19 @@ func (r *MissionKeyReconciler) Reconcile(ctx context.Context, req ctrl.Request) 
 		return ctrl.Result{}, err
 	}
 
-	// Check if secret and service account still exists if not create.
-	secret := v1.Secret{
-		Data: map[string][]byte{"creds": key.Spec.Data},
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      req.Name,
-			Namespace: req.Namespace,
-		},
+	if err := r.CreateSecret(ctx, req, key); err != nil {
+		return ctrl.Result{}, err
 	}
+
+	// Check if secret and service account still exists if not create.
 	sa := v1.ServiceAccount{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      req.Name,
 			Namespace: req.Namespace,
 		},
 	}
-	if err := controllerutil.SetControllerReference(key, &secret, r.Scheme); err != nil {
-		return ctrl.Result{}, err
-	}
 	if err := controllerutil.SetControllerReference(key, &sa, r.Scheme); err != nil {
 		return ctrl.Result{}, err
-	}
-	if err := r.Get(ctx, req.NamespacedName, &secret); err != nil {
-		if k8serrors.IsNotFound(err) {
-			return ctrl.Result{}, r.Create(ctx, &secret)
-		}
-		return ctrl.Result{}, err
-	} else if !reflect.DeepEqual(key.Spec.Data, secret.Data["creds"]) {
-		secret.Data = map[string][]byte{"creds": key.Spec.Data}
-		return ctrl.Result{}, r.Update(ctx, &secret)
 	}
 	if err = r.Get(ctx, req.NamespacedName, &sa); err != nil {
 		if k8serrors.IsNotFound(err) {
