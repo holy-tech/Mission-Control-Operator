@@ -29,7 +29,24 @@ import (
 	utils "github.com/holy-tech/Mission-Control-Operator/internal/controller/utils"
 )
 
-func (r *MissionReconciler) ConfirmProvider(ctx context.Context, mission *missionv1alpha1.Mission, providerName string) error {
+func (r *MissionReconciler) ConfirmProvider(ctx context.Context, mission *missionv1alpha1.Mission) error {
+	for _, p := range mission.Spec.Packages {
+		if !utils.Contains(utils.GetSupportedProviders(), p.Provider) {
+			message := fmt.Sprintf("Provider %s is not supported, please use one of %v", p.Provider, utils.GetSupportedProviders())
+			err := errors.New(message)
+			r.Recorder.Event(mission, "Warning", "Failed", message)
+			return err
+		}
+		err := r.ProviderInstalled(ctx, mission, p.Provider)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func (r *MissionReconciler) ProviderInstalled(ctx context.Context, mission *missionv1alpha1.Mission, providerName string) error {
+
 	if utils.Contains(utils.GetValues(ProviderMapping), providerName) {
 		k8providerName := ProviderMapping[providerName]
 		p, err := r.GetProvider(ctx, k8providerName)

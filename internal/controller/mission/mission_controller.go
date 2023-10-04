@@ -38,7 +38,6 @@ import (
 	gcpv1 "github.com/upbound/provider-gcp/apis/v1beta1"
 
 	missionv1alpha1 "github.com/holy-tech/Mission-Control-Operator/api/mission/v1alpha1"
-	utils "github.com/holy-tech/Mission-Control-Operator/internal/controller/utils"
 )
 
 type MissionReconciler struct {
@@ -72,17 +71,8 @@ func (r *MissionReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ct
 	}
 
 	// Check that the providers being used in specified mission are installed in the cluster and are supported
-	for _, p := range mission.Spec.Packages {
-		if !utils.Contains(utils.GetSupportedProviders(), p.Provider) {
-			message := fmt.Sprintf("Provider %s is not supported, please use one of %v", p.Provider, utils.GetSupportedProviders())
-			err := errors.New(message)
-			r.Recorder.Event(mission, "Warning", "Failed", message)
-			return ctrl.Result{}, err
-		}
-		err := r.ConfirmProvider(ctx, mission, p.Provider)
-		if err != nil {
-			return ctrl.Result{}, err
-		}
+	if err := r.ConfirmProvider(ctx, mission); err != nil {
+		return ctrl.Result{}, err
 	}
 
 	r.Recorder.Event(mission, "Normal", "Success", "Mission correctly connected to Crossplane")
