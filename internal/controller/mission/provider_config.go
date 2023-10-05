@@ -26,6 +26,7 @@ import (
 	k8serrors "k8s.io/apimachinery/pkg/api/errors"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	types "k8s.io/apimachinery/pkg/types"
+	client "sigs.k8s.io/controller-runtime/pkg/client"
 	controllerutil "sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 
 	xpv1 "github.com/crossplane/crossplane-runtime/apis/common/v1"
@@ -47,20 +48,37 @@ func (r *MissionReconciler) ReconcileProviderConfigs(ctx context.Context, missio
 }
 
 func (r *MissionReconciler) ReconcileProviderConfigByPackage(ctx context.Context, mission *missionv1alpha1.Mission, pkg *missionv1alpha1.PackageConfig) error {
+	var err error
+	var providerConfig, expectedProviderConfig client.Object
 	if pkg.Provider == "GCP" {
-		return r.ReconcileProviderConfigGCP(ctx, pkg, mission)
+		providerConfig, expectedProviderConfig = r.GetProviderConfigGCP(ctx, pkg, mission)
+	} else if pkg.Provider == "AWS" {
+		providerConfig, expectedProviderConfig = r.GetProviderConfigAWS(ctx, pkg, mission)
+	} else if pkg.Provider == "AZURE" {
+		providerConfig, expectedProviderConfig = r.GetProviderConfigAzure(ctx, pkg, mission)
+	} else {
+		message := fmt.Sprintf("Provider %s not known", pkg.Provider)
+		err = errors.New(message)
 	}
-	if pkg.Provider == "AWS" {
-		return r.ReconcileProviderConfigAWS(ctx, pkg, mission)
+	if err != nil {
+		return err
 	}
-	if pkg.Provider == "AZURE" {
-		return r.ReconcileProviderConfigAzure(ctx, pkg, mission)
+	if err := controllerutil.SetControllerReference(mission, expectedProviderConfig, r.Scheme); err != nil {
+		return err
 	}
-	message := fmt.Sprintf("Provider %s not known", pkg.Provider)
-	return errors.New(message)
+	if err := r.Get(ctx, types.NamespacedName{Name: expectedProviderConfig.GetName()}, providerConfig); err != nil {
+		if k8serrors.IsNotFound(err) {
+			return r.Create(ctx, expectedProviderConfig)
+		}
+	} else if !reflect.DeepEqual(providerConfig, expectedProviderConfig) {
+		providerConfig = expectedProviderConfig
+		err := r.Update(ctx, providerConfig)
+		return err
+	}
+	return nil
 }
 
-func (r *MissionReconciler) ReconcileProviderConfigGCP(ctx context.Context, pkg *missionv1alpha1.PackageConfig, mission *missionv1alpha1.Mission) error {
+func (r *MissionReconciler) GetProviderConfigGCP(ctx context.Context, pkg *missionv1alpha1.PackageConfig, mission *missionv1alpha1.Mission) (client.Object, client.Object) {
 	providerName := mission.Name + "-" + strings.ToLower(pkg.Provider)
 	providerConfig := &gcpv1.ProviderConfig{}
 	expectedProviderConfig := &gcpv1.ProviderConfig{
@@ -83,22 +101,10 @@ func (r *MissionReconciler) ReconcileProviderConfigGCP(ctx context.Context, pkg 
 			},
 		},
 	}
-	if err := controllerutil.SetControllerReference(mission, expectedProviderConfig, r.Scheme); err != nil {
-		return err
-	}
-	if err := r.Get(ctx, types.NamespacedName{Name: providerName}, providerConfig); err != nil {
-		if k8serrors.IsNotFound(err) {
-			return r.Create(ctx, expectedProviderConfig)
-		}
-	} else if !reflect.DeepEqual(providerConfig, expectedProviderConfig) {
-		providerConfig.Spec = expectedProviderConfig.Spec
-		err := r.Update(ctx, providerConfig)
-		return err
-	}
-	return nil
+	return providerConfig, expectedProviderConfig
 }
 
-func (r *MissionReconciler) ReconcileProviderConfigAWS(ctx context.Context, pkg *missionv1alpha1.PackageConfig, mission *missionv1alpha1.Mission) error {
+func (r *MissionReconciler) GetProviderConfigAWS(ctx context.Context, pkg *missionv1alpha1.PackageConfig, mission *missionv1alpha1.Mission) (client.Object, client.Object) {
 	providerName := mission.Name + "-" + strings.ToLower(pkg.Provider)
 	providerConfig := &awsv1.ProviderConfig{}
 	expectedProviderConfig := &awsv1.ProviderConfig{
@@ -120,22 +126,10 @@ func (r *MissionReconciler) ReconcileProviderConfigAWS(ctx context.Context, pkg 
 			},
 		},
 	}
-	if err := controllerutil.SetControllerReference(mission, expectedProviderConfig, r.Scheme); err != nil {
-		return err
-	}
-	if err := r.Get(ctx, types.NamespacedName{Name: providerName}, providerConfig); err != nil {
-		if k8serrors.IsNotFound(err) {
-			return r.Create(ctx, expectedProviderConfig)
-		}
-	} else if !reflect.DeepEqual(providerConfig, expectedProviderConfig) {
-		providerConfig.Spec = expectedProviderConfig.Spec
-		err := r.Update(ctx, providerConfig)
-		return err
-	}
-	return nil
+	return providerConfig, expectedProviderConfig
 }
 
-func (r *MissionReconciler) ReconcileProviderConfigAzure(ctx context.Context, pkg *missionv1alpha1.PackageConfig, mission *missionv1alpha1.Mission) error {
+func (r *MissionReconciler) GetProviderConfigAzure(ctx context.Context, pkg *missionv1alpha1.PackageConfig, mission *missionv1alpha1.Mission) (client.Object, client.Object) {
 	providerName := mission.Name + "-" + strings.ToLower(pkg.Provider)
 	providerConfig := &azrv1.ProviderConfig{}
 	expectedProviderConfig := &azrv1.ProviderConfig{
@@ -157,17 +151,5 @@ func (r *MissionReconciler) ReconcileProviderConfigAzure(ctx context.Context, pk
 			},
 		},
 	}
-	if err := controllerutil.SetControllerReference(mission, expectedProviderConfig, r.Scheme); err != nil {
-		return err
-	}
-	if err := r.Get(ctx, types.NamespacedName{Name: providerName}, providerConfig); err != nil {
-		if k8serrors.IsNotFound(err) {
-			return r.Create(ctx, expectedProviderConfig)
-		}
-	} else if !reflect.DeepEqual(providerConfig, expectedProviderConfig) {
-		providerConfig.Spec = expectedProviderConfig.Spec
-		err := r.Update(ctx, providerConfig)
-		return err
-	}
-	return nil
+	return providerConfig, expectedProviderConfig
 }
