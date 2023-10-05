@@ -52,13 +52,20 @@ func (r *MissionKeyReconciler) Reconcile(ctx context.Context, req ctrl.Request) 
 	if err := r.CreateServiceAccount(ctx, req, key); err != nil {
 		return ctrl.Result{}, err
 	}
+	if err := r.ManageFinalizer(key); err != nil {
+		return reconcile.Result{}, err
+	}
 
+	return ctrl.Result{}, nil
+}
+
+func (r *MissionKeyReconciler) ManageFinalizer(key *missionv1alpha1.MissionKey) error {
 	keyFinalizer := key.Spec.Name
 	if key.ObjectMeta.DeletionTimestamp.IsZero() {
 		if !utils.Contains(key.ObjectMeta.Finalizers, keyFinalizer) {
 			key.ObjectMeta.Finalizers = append(key.ObjectMeta.Finalizers, keyFinalizer)
 			if err := r.Update(context.Background(), key); err != nil {
-				return reconcile.Result{}, err
+				return err
 			}
 		}
 	}
@@ -67,11 +74,10 @@ func (r *MissionKeyReconciler) Reconcile(ctx context.Context, req ctrl.Request) 
 
 		key.ObjectMeta.Finalizers = utils.RemoveString(key.ObjectMeta.Finalizers, keyFinalizer)
 		if err := r.Update(context.Background(), key); err != nil {
-			return reconcile.Result{}, err
+			return err
 		}
 	}
-
-	return ctrl.Result{}, nil
+	return nil
 }
 
 func (r *MissionKeyReconciler) SetupWithManager(mgr ctrl.Manager) error {
