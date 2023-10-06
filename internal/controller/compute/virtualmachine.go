@@ -23,9 +23,7 @@ import (
 	k8serrors "k8s.io/apimachinery/pkg/api/errors"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	types "k8s.io/apimachinery/pkg/types"
-	ctrl "sigs.k8s.io/controller-runtime"
 	controllerutil "sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
-	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 
 	cpcommonv1 "github.com/crossplane/crossplane-runtime/apis/common/v1"
 	computev1alpha1 "github.com/holy-tech/Mission-Control-Operator/api/compute/v1alpha1"
@@ -33,7 +31,21 @@ import (
 	gcpcomputev1 "github.com/upbound/provider-gcp/apis/compute/v1beta1"
 )
 
-func (r *VirtualMachineReconciler) ReconcileVirtualMachine(ctx context.Context, vm *computev1alpha1.VirtualMachine, mission *v1alpha1.Mission) (ctrl.Result, error) {
+func (r *VirtualMachineReconciler) ReconcileVirtualMachine(ctx context.Context, mission *v1alpha1.Mission, vm *computev1alpha1.VirtualMachine) error {
+	keyName := vm.Spec.MissionRef.MissionKey
+	missionKey, err := r.GetMissionKey(ctx, mission, keyName)
+	if err != nil {
+		return err
+	}
+	err = r.ReconcileVirtualMachineByProvider(ctx, mission, missionKey, vm)
+	if err != nil {
+		r.Recorder.Event(mission, "Warning", "ProviderConfig not created", "Could not correctly create ProviderConfig resource.")
+		return err
+	}
+	return nil
+}
+
+func (r *VirtualMachineReconciler) ReconcileVirtualMachineByProvider(ctx context.Context, mission *v1alpha1.Mission, missionKey *v1alpha1.MissionKey, vm *computev1alpha1.VirtualMachine) error {
 	// Create virtual machine config
 	currentgcpvm := gcpcomputev1.Instance{}
 	gcpvm := gcpcomputev1.Instance{
@@ -61,17 +73,17 @@ func (r *VirtualMachineReconciler) ReconcileVirtualMachine(ctx context.Context, 
 		},
 	}
 	if err := controllerutil.SetControllerReference(vm, &gcpvm, r.Scheme); err != nil {
-		return ctrl.Result{}, err
+		return err
 	}
 	err := r.Get(ctx, types.NamespacedName{Name: vm.Spec.ForProvider.Name}, &currentgcpvm)
 	if err != nil {
 		if k8serrors.IsNotFound(err) {
-			return ctrl.Result{}, r.Create(ctx, &gcpvm)
+			return r.Create(ctx, &gcpvm)
 		}
-		return ctrl.Result{}, err
+		return err
 	}
 	if reflect.DeepEqual(currentgcpvm.Spec, gcpvm.Spec) {
-		return ctrl.Result{}, nil
+		return nil
 	}
-	return reconcile.Result{}, r.Update(ctx, &currentgcpvm)
+	return r.Update(ctx, &currentgcpvm)
 }
