@@ -24,9 +24,9 @@ import (
 	"strings"
 
 	k8serrors "k8s.io/apimachinery/pkg/api/errors"
-	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	runtime "k8s.io/apimachinery/pkg/runtime"
 	types "k8s.io/apimachinery/pkg/types"
-	client "sigs.k8s.io/controller-runtime/pkg/client"
 	controllerutil "sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 
 	xpv1 "github.com/crossplane/crossplane-runtime/apis/common/v1"
@@ -35,6 +35,28 @@ import (
 	azrv1 "github.com/upbound/provider-azure/apis/v1beta1"
 	gcpv1 "github.com/upbound/provider-gcp/apis/v1beta1"
 )
+
+type GenericProviderConfigInterface interface {
+	metav1.Object
+	runtime.Object
+
+	GetSpec()
+	SetSpec()
+}
+
+type GenericProviderConfig struct {
+	GenericProviderConfigInterface
+
+	Spec interface{}
+}
+
+func (providerConfig *GenericProviderConfig) GetSpec() interface{} {
+	return providerConfig.Spec
+}
+
+func (providerConfig *GenericProviderConfig) SetSpec(newVal interface{}) {
+	providerConfig.Spec = newVal
+}
 
 func (r *MissionReconciler) ReconcileProviderConfigs(ctx context.Context, mission *missionv1alpha1.Mission) error {
 	for _, pkg := range mission.Spec.Packages {
@@ -49,7 +71,7 @@ func (r *MissionReconciler) ReconcileProviderConfigs(ctx context.Context, missio
 
 func (r *MissionReconciler) ReconcileProviderConfigByPackage(ctx context.Context, mission *missionv1alpha1.Mission, pkg *missionv1alpha1.PackageConfig) error {
 	var err error
-	var providerConfig, expectedProviderConfig client.Object
+	var providerConfig, expectedProviderConfig GenericProviderConfig
 	if pkg.Provider == "GCP" {
 		providerConfig, expectedProviderConfig = r.GetProviderConfigGCP(ctx, pkg, mission)
 	} else if pkg.Provider == "AWS" {
@@ -70,19 +92,25 @@ func (r *MissionReconciler) ReconcileProviderConfigByPackage(ctx context.Context
 		if k8serrors.IsNotFound(err) {
 			return r.Create(ctx, expectedProviderConfig)
 		}
-	} else if !reflect.DeepEqual(providerConfig, expectedProviderConfig) {
-		providerConfig = expectedProviderConfig
+	} else if !reflect.DeepEqual(providerConfig.Spec, expectedProviderConfig.Spec) {
+		expectedProviderConfig.SetUID(providerConfig.GetUID())
+		expectedProviderConfig.SetResourceVersion(providerConfig.GetResourceVersion())
+		providerConfig.Spec = expectedProviderConfig.Spec
 		err := r.Update(ctx, providerConfig)
 		return err
 	}
 	return nil
 }
 
-func (r *MissionReconciler) GetProviderConfigGCP(ctx context.Context, pkg *missionv1alpha1.PackageConfig, mission *missionv1alpha1.Mission) (client.Object, client.Object) {
+func (r *MissionReconciler) GetProviderConfigGCP(ctx context.Context, pkg *missionv1alpha1.PackageConfig, mission *missionv1alpha1.Mission) (GenericProviderConfig, GenericProviderConfig) {
 	providerName := mission.Name + "-" + strings.ToLower(pkg.Provider)
 	providerConfig := &gcpv1.ProviderConfig{}
 	expectedProviderConfig := &gcpv1.ProviderConfig{
-		ObjectMeta: v1.ObjectMeta{
+		TypeMeta: metav1.TypeMeta{
+			Kind:       "ProviderConfig",
+			APIVersion: "gcp.upbound.io/v1beta1",
+		},
+		ObjectMeta: metav1.ObjectMeta{
 			Name: providerName,
 		},
 		Spec: gcpv1.ProviderConfigSpec{
@@ -101,14 +129,16 @@ func (r *MissionReconciler) GetProviderConfigGCP(ctx context.Context, pkg *missi
 			},
 		},
 	}
+	var temp = providerConfig.Spec
+	_ = temp.ProjectID
 	return providerConfig, expectedProviderConfig
 }
 
-func (r *MissionReconciler) GetProviderConfigAWS(ctx context.Context, pkg *missionv1alpha1.PackageConfig, mission *missionv1alpha1.Mission) (client.Object, client.Object) {
+func (r *MissionReconciler) GetProviderConfigAWS(ctx context.Context, pkg *missionv1alpha1.PackageConfig, mission *missionv1alpha1.Mission) (GenericProviderConfig, GenericProviderConfig) {
 	providerName := mission.Name + "-" + strings.ToLower(pkg.Provider)
 	providerConfig := &awsv1.ProviderConfig{}
 	expectedProviderConfig := &awsv1.ProviderConfig{
-		ObjectMeta: v1.ObjectMeta{
+		ObjectMeta: metav1.ObjectMeta{
 			Name: providerName,
 		},
 		Spec: awsv1.ProviderConfigSpec{
@@ -129,11 +159,11 @@ func (r *MissionReconciler) GetProviderConfigAWS(ctx context.Context, pkg *missi
 	return providerConfig, expectedProviderConfig
 }
 
-func (r *MissionReconciler) GetProviderConfigAzure(ctx context.Context, pkg *missionv1alpha1.PackageConfig, mission *missionv1alpha1.Mission) (client.Object, client.Object) {
+func (r *MissionReconciler) GetProviderConfigAzure(ctx context.Context, pkg *missionv1alpha1.PackageConfig, mission *missionv1alpha1.Mission) (GenericProviderConfig, GenericProviderConfig) {
 	providerName := mission.Name + "-" + strings.ToLower(pkg.Provider)
 	providerConfig := &azrv1.ProviderConfig{}
 	expectedProviderConfig := &azrv1.ProviderConfig{
-		ObjectMeta: v1.ObjectMeta{
+		ObjectMeta: metav1.ObjectMeta{
 			Name: providerName,
 		},
 		Spec: azrv1.ProviderConfigSpec{
