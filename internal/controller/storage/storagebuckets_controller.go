@@ -53,7 +53,7 @@ func (r *StorageBucketsReconciler) Reconcile(ctx context.Context, req ctrl.Reque
 	if err != nil {
 		return ctrl.Result{}, err
 	}
-	err = r.ReconcileStorageBucket(ctx, bucket, &mission)
+	err = r.ReconcileStorageBucket(ctx, mission, bucket)
 	if err != nil {
 		return reconcile.Result{}, err
 	}

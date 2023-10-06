@@ -36,7 +36,7 @@ import (
 	gcpstoragev1 "github.com/upbound/provider-gcp/apis/storage/v1beta1"
 )
 
-func (r *StorageBucketsReconciler) ReconcileStorageBucket(ctx context.Context, bucket *storagev1alpha1.StorageBuckets, mission *v1alpha1.Mission) error {
+func (r *StorageBucketsReconciler) ReconcileStorageBucket(ctx context.Context, mission *v1alpha1.Mission, bucket *storagev1alpha1.StorageBuckets) error {
 	keyName := bucket.Spec.MissionRef.MissionKey
 	missionKey, err := r.GetMissionKey(ctx, *mission, keyName)
 	if err != nil {
