@@ -46,7 +46,7 @@ type ProviderConfigInterface interface {
 
 func (r *MissionReconciler) ReconcileProviderConfigs(ctx context.Context, mission *missionv1alpha1.Mission) error {
 	for _, pkg := range mission.Spec.Packages {
-		err := r.ReconcileProviderConfigByPackage(ctx, mission, &pkg)
+		err := r.ReconcileProviderConfigByProvider(ctx, mission, &pkg)
 		if err != nil {
 			r.Recorder.Event(mission, "Warning", "ProviderConfig not created", "Could not correctly create ProviderConfig resource.")
 			return err
@@ -55,7 +55,7 @@ func (r *MissionReconciler) ReconcileProviderConfigs(ctx context.Context, missio
 	return nil
 }
 
-func (r *MissionReconciler) ReconcileProviderConfigByPackage(ctx context.Context, mission *missionv1alpha1.Mission, pkg *missionv1alpha1.PackageConfig) error {
+func (r *MissionReconciler) ReconcileProviderConfigByProvider(ctx context.Context, mission *missionv1alpha1.Mission, pkg *missionv1alpha1.PackageConfig) error {
 	var err error
 	if pkg.Provider == "GCP" {
 		err = r.GetProviderConfigGCP(ctx, pkg, mission)
