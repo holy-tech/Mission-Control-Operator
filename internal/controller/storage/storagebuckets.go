@@ -54,9 +54,9 @@ func (r *StorageBucketsReconciler) ReconcileStorageBucketByProvider(ctx context.
 	var err error
 	provider := missionKey.Spec.Type
 	if provider == "gcp" {
-		err = r.GetStorageBucketGCP(ctx, bucket, mission)
+		err = r.GetStorageBucketGCP(ctx, mission, bucket)
 	} else if provider == "aws" {
-		err = r.GetStorageBucketAWS(ctx, bucket, mission)
+		err = r.GetStorageBucketAWS(ctx, mission, bucket)
 	} else {
 		message := fmt.Sprintf("Provider %s not known", provider)
 		err = errors.New(message)
@@ -67,7 +67,7 @@ func (r *StorageBucketsReconciler) ReconcileStorageBucketByProvider(ctx context.
 	return nil
 }
 
-func (r *StorageBucketsReconciler) GetStorageBucketGCP(ctx context.Context, bucket *storagev1alpha1.StorageBuckets, mission *v1alpha1.Mission) error {
+func (r *StorageBucketsReconciler) GetStorageBucketGCP(ctx context.Context, mission *v1alpha1.Mission, bucket *storagev1alpha1.StorageBuckets) error {
 	currentgcpbucket := gcpstoragev1.Bucket{}
 	gcpbucket := gcpstoragev1.Bucket{
 		ObjectMeta: v1.ObjectMeta{
@@ -100,7 +100,7 @@ func (r *StorageBucketsReconciler) GetStorageBucketGCP(ctx context.Context, buck
 	return r.Update(ctx, &currentgcpbucket)
 }
 
-func (r *StorageBucketsReconciler) GetStorageBucketAWS(ctx context.Context, bucket *storagev1alpha1.StorageBuckets, mission *v1alpha1.Mission) error {
+func (r *StorageBucketsReconciler) GetStorageBucketAWS(ctx context.Context, mission *v1alpha1.Mission, bucket *storagev1alpha1.StorageBuckets) error {
 	currentawsbucket := awsstoragev1.Bucket{}
 	awsbucket := awsstoragev1.Bucket{
 		ObjectMeta: v1.ObjectMeta{
