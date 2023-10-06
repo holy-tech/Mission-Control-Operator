@@ -28,9 +28,14 @@ type ProviderData struct {
 	Network     string `json:"network,omitempty"`
 }
 
+type VirtualMachineMissionRef struct {
+	MissionName string `json:"missionName,omitempty"`
+	MissionKey  string `json:"keyName,omitempty"`
+}
+
 type VirtualMachineSpec struct {
-	MissionRef  string       `json:"missionRef,omitempty"`
-	ForProvider ProviderData `json:"forProvider,omitempty"`
+	MissionRef  VirtualMachineMissionRef `json:"missionRef,omitempty"`
+	ForProvider ProviderData             `json:"forProvider,omitempty"`
 }
 
 type VirtualMachineStatus struct {

@@ -45,7 +45,7 @@ func (r *VirtualMachineReconciler) Reconcile(ctx context.Context, req ctrl.Reque
 		return ctrl.Result{}, err
 	}
 
-	mission, err := r.GetMission(ctx, vm.Spec.MissionRef, req.Namespace)
+	mission, err := r.GetMission(ctx, vm.Spec.MissionRef.MissionName, req.Namespace)
 	if err != nil {
 		return ctrl.Result{}, err
 	}
