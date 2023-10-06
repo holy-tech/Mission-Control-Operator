@@ -52,13 +52,13 @@ func (r *StorageBucketsReconciler) ReconcileStorageBucket(ctx context.Context, m
 
 func (r *StorageBucketsReconciler) ReconcileStorageBucketByProvider(ctx context.Context, mission *v1alpha1.Mission, missionKey *v1alpha1.MissionKey, bucket *storagev1alpha1.StorageBuckets) error {
 	var err error
-	pkg := mission.Spec.Packages[0]
-	if pkg.Provider == "GCP" {
+	provider := missionKey.Spec.Type
+	if provider == "gcp" {
 		err = r.GetStorageBucketGCP(ctx, bucket, mission)
-	} else if pkg.Provider == "AWS" {
+	} else if provider == "aws" {
 		err = r.GetStorageBucketAWS(ctx, bucket, mission)
 	} else {
-		message := fmt.Sprintf("Provider %s not known", pkg.Provider)
+		message := fmt.Sprintf("Provider %s not known", provider)
 		err = errors.New(message)
 	}
 	if err != nil {
