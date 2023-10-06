@@ -18,19 +18,10 @@ package storage
 
 import (
 	"context"
-	"reflect"
-	"strings"
 
-	k8serrors "k8s.io/apimachinery/pkg/api/errors"
-	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/runtime"
-	types "k8s.io/apimachinery/pkg/types"
+	runtime "k8s.io/apimachinery/pkg/runtime"
 	ctrl "sigs.k8s.io/controller-runtime"
-	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
-	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 
-	cpcommonv1 "github.com/crossplane/crossplane-runtime/apis/common/v1"
-	v1alpha1 "github.com/holy-tech/Mission-Control-Operator/api/mission/v1alpha1"
 	storagev1alpha1 "github.com/holy-tech/Mission-Control-Operator/api/storage/v1alpha1"
 	utils "github.com/holy-tech/Mission-Control-Operator/internal/controller/utils"
 
@@ -60,39 +51,6 @@ func (r *StorageBucketsReconciler) Reconcile(ctx context.Context, req ctrl.Reque
 	}
 	result, err := r.ReconcileStorageBucket(ctx, bucket, &mission)
 	return result, err
-}
-
-func (r *StorageBucketsReconciler) ReconcileStorageBucket(ctx context.Context, bucket *storagev1alpha1.StorageBuckets, mission *v1alpha1.Mission) (ctrl.Result, error) {
-	currentgcpbucket := gcpstoragev1.Bucket{}
-	gcpbucket := gcpstoragev1.Bucket{
-		ObjectMeta: v1.ObjectMeta{
-			Name: bucket.Spec.ForProvider.Name,
-		},
-		Spec: gcpstoragev1.BucketSpec{
-			ForProvider: gcpstoragev1.BucketParameters{
-				Location: &bucket.Spec.ForProvider.Location,
-			},
-			ResourceSpec: cpcommonv1.ResourceSpec{
-				ProviderConfigReference: &cpcommonv1.Reference{
-					Name: mission.GetName() + "-" + strings.ToLower("GCP"),
-				},
-			},
-		},
-	}
-	if err := controllerutil.SetControllerReference(bucket, &gcpbucket, r.Scheme); err != nil {
-		return ctrl.Result{}, err
-	}
-	err := r.Get(ctx, types.NamespacedName{Name: bucket.Spec.ForProvider.Name}, &currentgcpbucket)
-	if err != nil {
-		if k8serrors.IsNotFound(err) {
-			return ctrl.Result{}, r.Create(ctx, &gcpbucket)
-		}
-		return ctrl.Result{}, err
-	}
-	if reflect.DeepEqual(currentgcpbucket.Spec, gcpbucket.Spec) {
-		return ctrl.Result{}, nil
-	}
-	return reconcile.Result{}, r.Update(ctx, &currentgcpbucket)
 }
 
 // SetupWithManager sets up the controller with the Manager.
