@@ -20,7 +20,9 @@ import (
 	"context"
 
 	runtime "k8s.io/apimachinery/pkg/runtime"
+	record "k8s.io/client-go/tools/record"
 	ctrl "sigs.k8s.io/controller-runtime"
+	reconcile "sigs.k8s.io/controller-runtime/pkg/reconcile"
 
 	storagev1alpha1 "github.com/holy-tech/Mission-Control-Operator/api/storage/v1alpha1"
 	utils "github.com/holy-tech/Mission-Control-Operator/internal/controller/utils"
@@ -32,7 +34,8 @@ import (
 // StorageBucketsReconciler reconciles a StorageBuckets object
 type StorageBucketsReconciler struct {
 	utils.MissionClient
-	Scheme *runtime.Scheme
+	Scheme   *runtime.Scheme
+	Recorder record.EventRecorder
 }
 
 //+kubebuilder:rbac:groups=storage.mission-control.apis.io,resources=storagebuckets,verbs=get;list;watch;create;update;patch;delete
@@ -46,12 +49,15 @@ func (r *StorageBucketsReconciler) Reconcile(ctx context.Context, req ctrl.Reque
 		return ctrl.Result{}, err
 	}
 
-	mission, err := r.GetMission(ctx, bucket.Spec.MissionRef, req.Namespace)
+	mission, err := r.GetMission(ctx, bucket.Spec.MissionRef.MissionName, req.Namespace)
 	if err != nil {
 		return ctrl.Result{}, err
 	}
-	result, err := r.ReconcileStorageBucket(ctx, bucket, &mission)
-	return result, err
+	err = r.ReconcileStorageBucket(ctx, bucket, &mission)
+	if err != nil {
+		return reconcile.Result{}, err
+	}
+	return ctrl.Result{}, err
 }
 
 // SetupWithManager sets up the controller with the Manager.
