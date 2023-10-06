@@ -22,7 +22,6 @@ import (
 	runtime "k8s.io/apimachinery/pkg/runtime"
 	record "k8s.io/client-go/tools/record"
 	ctrl "sigs.k8s.io/controller-runtime"
-	reconcile "sigs.k8s.io/controller-runtime/pkg/reconcile"
 
 	storagev1alpha1 "github.com/holy-tech/Mission-Control-Operator/api/storage/v1alpha1"
 	utils "github.com/holy-tech/Mission-Control-Operator/internal/controller/utils"
@@ -54,9 +53,6 @@ func (r *StorageBucketsReconciler) Reconcile(ctx context.Context, req ctrl.Reque
 		return ctrl.Result{}, err
 	}
 	err = r.ReconcileStorageBucket(ctx, mission, bucket)
-	if err != nil {
-		return reconcile.Result{}, err
-	}
 	return ctrl.Result{}, err
 }
 
