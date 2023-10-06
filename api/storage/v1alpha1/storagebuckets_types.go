@@ -27,7 +27,7 @@ type ProviderData struct {
 
 type StorageBucketMissionRef struct {
 	MissionName string `json:"missionName,omitempty"`
-	MissionKey  string `json:"missionKey,omitempty"`
+	MissionKey  string `json:"keyName,omitempty"`
 }
 
 type StorageBucketsSpec struct {
