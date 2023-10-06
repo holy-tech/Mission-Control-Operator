@@ -26,9 +26,7 @@ import (
 	k8serrors "k8s.io/apimachinery/pkg/api/errors"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	types "k8s.io/apimachinery/pkg/types"
-	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
-	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 
 	cpcommonv1 "github.com/crossplane/crossplane-runtime/apis/common/v1"
 	v1alpha1 "github.com/holy-tech/Mission-Control-Operator/api/mission/v1alpha1"
@@ -38,40 +36,21 @@ import (
 	gcpstoragev1 "github.com/upbound/provider-gcp/apis/storage/v1beta1"
 )
 
-func (r *StorageBucketsReconciler) ReconcileStorageBucket(ctx context.Context, bucket *storagev1alpha1.StorageBuckets, mission *v1alpha1.Mission) (ctrl.Result, error) {
-	currentgcpbucket := gcpstoragev1.Bucket{}
-	gcpbucket := gcpstoragev1.Bucket{
-		ObjectMeta: v1.ObjectMeta{
-			Name: bucket.Spec.ForProvider.Name,
-		},
-		Spec: gcpstoragev1.BucketSpec{
-			ForProvider: gcpstoragev1.BucketParameters{
-				Location: &bucket.Spec.ForProvider.Location,
-			},
-			ResourceSpec: cpcommonv1.ResourceSpec{
-				ProviderConfigReference: &cpcommonv1.Reference{
-					Name: mission.GetName() + "-" + strings.ToLower("GCP"),
-				},
-			},
-		},
-	}
-	if err := controllerutil.SetControllerReference(bucket, &gcpbucket, r.Scheme); err != nil {
-		return ctrl.Result{}, err
-	}
-	err := r.Get(ctx, types.NamespacedName{Name: bucket.Spec.ForProvider.Name}, &currentgcpbucket)
+func (r *StorageBucketsReconciler) ReconcileStorageBucket(ctx context.Context, bucket *storagev1alpha1.StorageBuckets, mission *v1alpha1.Mission) error {
+	keyName := bucket.Spec.MissionRef.MissionKey
+	missionKey, err := r.GetMissionKey(ctx, *mission, keyName)
 	if err != nil {
-		if k8serrors.IsNotFound(err) {
-			return ctrl.Result{}, r.Create(ctx, &gcpbucket)
-		}
-		return ctrl.Result{}, err
+		return err
 	}
-	if reflect.DeepEqual(currentgcpbucket.Spec, gcpbucket.Spec) {
-		return ctrl.Result{}, nil
+	err = r.ReconcileStorageBucketByProvider(ctx, mission, missionKey, bucket)
+	if err != nil {
+		r.Recorder.Event(mission, "Warning", "ProviderConfig not created", "Could not correctly create ProviderConfig resource.")
+		return err
 	}
-	return reconcile.Result{}, r.Update(ctx, &currentgcpbucket)
+	return nil
 }
 
-func (r *StorageBucketsReconciler) ReconcileStorageBucketByProvider(ctx context.Context, bucket *storagev1alpha1.StorageBuckets, mission *v1alpha1.Mission) error {
+func (r *StorageBucketsReconciler) ReconcileStorageBucketByProvider(ctx context.Context, mission *v1alpha1.Mission, missionKey *v1alpha1.MissionKey, bucket *storagev1alpha1.StorageBuckets) error {
 	var err error
 	pkg := mission.Spec.Packages[0]
 	if pkg.Provider == "GCP" {
