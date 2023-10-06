@@ -37,7 +37,7 @@ func (r *MissionClient) GetMission(ctx context.Context, missionName, missionName
 	return &mission, err
 }
 
-func (r *MissionClient) GetMissionKey(ctx context.Context, mission v1alpha1.Mission, keyName string) (*v1alpha1.MissionKey, error) {
+func (r *MissionClient) GetMissionKey(ctx context.Context, mission *v1alpha1.Mission, keyName string) (*v1alpha1.MissionKey, error) {
 	for _, pkg := range mission.Spec.Packages {
 		missionkey := v1alpha1.MissionKey{}
 		if pkg.Credentials.Name != keyName {

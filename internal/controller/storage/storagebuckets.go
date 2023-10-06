@@ -38,7 +38,7 @@ import (
 
 func (r *StorageBucketsReconciler) ReconcileStorageBucket(ctx context.Context, mission *v1alpha1.Mission, bucket *storagev1alpha1.StorageBuckets) error {
 	keyName := bucket.Spec.MissionRef.MissionKey
-	missionKey, err := r.GetMissionKey(ctx, *mission, keyName)
+	missionKey, err := r.GetMissionKey(ctx, mission, keyName)
 	if err != nil {
 		return err
 	}
