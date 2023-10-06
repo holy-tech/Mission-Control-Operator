@@ -18,6 +18,8 @@ package compute
 
 import (
 	"context"
+	"errors"
+	"fmt"
 	"reflect"
 
 	k8serrors "k8s.io/apimachinery/pkg/api/errors"
@@ -46,6 +48,23 @@ func (r *VirtualMachineReconciler) ReconcileVirtualMachine(ctx context.Context, 
 }
 
 func (r *VirtualMachineReconciler) ReconcileVirtualMachineByProvider(ctx context.Context, mission *v1alpha1.Mission, missionKey *v1alpha1.MissionKey, vm *computev1alpha1.VirtualMachine) error {
+	var err error
+	pkg := mission.Spec.Packages[0]
+	if pkg.Provider == "GCP" {
+		err = r.GetVirtualMachineGCP(ctx, mission, vm)
+	} else if pkg.Provider == "AWS" {
+		err = r.GetVirtualMachineAWS(ctx, mission, vm)
+	} else {
+		message := fmt.Sprintf("Provider %s not known", pkg.Provider)
+		err = errors.New(message)
+	}
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (r *VirtualMachineReconciler) GetVirtualMachineGCP(ctx context.Context, mission *v1alpha1.Mission, vm *computev1alpha1.VirtualMachine) error {
 	// Create virtual machine config
 	currentgcpvm := gcpcomputev1.Instance{}
 	gcpvm := gcpcomputev1.Instance{
