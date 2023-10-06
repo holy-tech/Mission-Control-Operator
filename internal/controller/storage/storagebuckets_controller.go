@@ -25,6 +25,7 @@ import (
 	storagev1alpha1 "github.com/holy-tech/Mission-Control-Operator/api/storage/v1alpha1"
 	utils "github.com/holy-tech/Mission-Control-Operator/internal/controller/utils"
 
+	awsstoragev1 "github.com/upbound/provider-aws/apis/s3/v1beta1"
 	gcpstoragev1 "github.com/upbound/provider-gcp/apis/storage/v1beta1"
 )
 
@@ -58,5 +59,6 @@ func (r *StorageBucketsReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&storagev1alpha1.StorageBuckets{}).
 		Owns(&gcpstoragev1.Bucket{}).
+		Owns(&awsstoragev1.Bucket{}).
 		Complete(r)
 }
