@@ -30,6 +30,7 @@ import (
 	cpcommonv1 "github.com/crossplane/crossplane-runtime/apis/common/v1"
 	computev1alpha1 "github.com/holy-tech/Mission-Control-Operator/api/compute/v1alpha1"
 	v1alpha1 "github.com/holy-tech/Mission-Control-Operator/api/mission/v1alpha1"
+	awscomputev1 "github.com/upbound/provider-aws/apis/ec2/v1beta1"
 	gcpcomputev1 "github.com/upbound/provider-gcp/apis/compute/v1beta1"
 )
 
@@ -105,4 +106,32 @@ func (r *VirtualMachineReconciler) GetVirtualMachineGCP(ctx context.Context, mis
 		return nil
 	}
 	return r.Update(ctx, &currentgcpvm)
+}
+
+func (r *VirtualMachineReconciler) GetVirtualMachineAWS(ctx context.Context, mission *v1alpha1.Mission, vm *computev1alpha1.VirtualMachine) error {
+	// Create virtual machine config
+	currentawsvm := awscomputev1.Instance{}
+	awsvm := awscomputev1.Instance{
+		ObjectMeta: v1.ObjectMeta{
+			Name: vm.Spec.ForProvider.Name,
+		},
+		Spec: awscomputev1.InstanceSpec{
+			ForProvider:  awscomputev1.InstanceParameters{},
+			ResourceSpec: cpcommonv1.ResourceSpec{},
+		},
+	}
+	if err := controllerutil.SetControllerReference(vm, &awsvm, r.Scheme); err != nil {
+		return err
+	}
+	err := r.Get(ctx, types.NamespacedName{Name: vm.Spec.ForProvider.Name}, &currentawsvm)
+	if err != nil {
+		if k8serrors.IsNotFound(err) {
+			return r.Create(ctx, &awsvm)
+		}
+		return err
+	}
+	if reflect.DeepEqual(currentawsvm.Spec, awsvm.Spec) {
+		return nil
+	}
+	return r.Update(ctx, &currentawsvm)
 }
