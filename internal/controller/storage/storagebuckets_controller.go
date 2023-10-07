@@ -18,29 +18,23 @@ package storage
 
 import (
 	"context"
-	"reflect"
-	"strings"
 
-	k8serrors "k8s.io/apimachinery/pkg/api/errors"
-	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/runtime"
-	types "k8s.io/apimachinery/pkg/types"
+	runtime "k8s.io/apimachinery/pkg/runtime"
+	record "k8s.io/client-go/tools/record"
 	ctrl "sigs.k8s.io/controller-runtime"
-	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
-	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 
-	cpcommonv1 "github.com/crossplane/crossplane-runtime/apis/common/v1"
-	v1alpha1 "github.com/holy-tech/Mission-Control-Operator/api/mission/v1alpha1"
 	storagev1alpha1 "github.com/holy-tech/Mission-Control-Operator/api/storage/v1alpha1"
 	utils "github.com/holy-tech/Mission-Control-Operator/internal/controller/utils"
 
+	awsstoragev1 "github.com/upbound/provider-aws/apis/s3/v1beta1"
 	gcpstoragev1 "github.com/upbound/provider-gcp/apis/storage/v1beta1"
 )
 
 // StorageBucketsReconciler reconciles a StorageBuckets object
 type StorageBucketsReconciler struct {
 	utils.MissionClient
-	Scheme *runtime.Scheme
+	Scheme   *runtime.Scheme
+	Recorder record.EventRecorder
 }
 
 //+kubebuilder:rbac:groups=storage.mission-control.apis.io,resources=storagebuckets,verbs=get;list;watch;create;update;patch;delete
@@ -54,45 +48,12 @@ func (r *StorageBucketsReconciler) Reconcile(ctx context.Context, req ctrl.Reque
 		return ctrl.Result{}, err
 	}
 
-	mission, err := r.GetMission(ctx, bucket.Spec.MissionRef, req.Namespace)
+	mission, err := r.GetMission(ctx, bucket.Spec.MissionRef.MissionName, req.Namespace)
 	if err != nil {
 		return ctrl.Result{}, err
 	}
-	result, err := r.ReconcileStorageBucket(ctx, bucket, &mission)
-	return result, err
-}
-
-func (r *StorageBucketsReconciler) ReconcileStorageBucket(ctx context.Context, bucket *storagev1alpha1.StorageBuckets, mission *v1alpha1.Mission) (ctrl.Result, error) {
-	currentgcpbucket := gcpstoragev1.Bucket{}
-	gcpbucket := gcpstoragev1.Bucket{
-		ObjectMeta: v1.ObjectMeta{
-			Name: bucket.Spec.ForProvider.Name,
-		},
-		Spec: gcpstoragev1.BucketSpec{
-			ForProvider: gcpstoragev1.BucketParameters{
-				Location: &bucket.Spec.ForProvider.Location,
-			},
-			ResourceSpec: cpcommonv1.ResourceSpec{
-				ProviderConfigReference: &cpcommonv1.Reference{
-					Name: mission.GetName() + "-" + strings.ToLower("GCP"),
-				},
-			},
-		},
-	}
-	if err := controllerutil.SetControllerReference(bucket, &gcpbucket, r.Scheme); err != nil {
-		return ctrl.Result{}, err
-	}
-	err := r.Get(ctx, types.NamespacedName{Name: bucket.Spec.ForProvider.Name}, &currentgcpbucket)
-	if err != nil {
-		if k8serrors.IsNotFound(err) {
-			return ctrl.Result{}, r.Create(ctx, &gcpbucket)
-		}
-		return ctrl.Result{}, err
-	}
-	if reflect.DeepEqual(currentgcpbucket.Spec, gcpbucket.Spec) {
-		return ctrl.Result{}, nil
-	}
-	return reconcile.Result{}, r.Update(ctx, &currentgcpbucket)
+	err = r.ReconcileStorageBucket(ctx, mission, bucket)
+	return ctrl.Result{}, err
 }
 
 // SetupWithManager sets up the controller with the Manager.
@@ -100,5 +61,6 @@ func (r *StorageBucketsReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&storagev1alpha1.StorageBuckets{}).
 		Owns(&gcpstoragev1.Bucket{}).
+		Owns(&awsstoragev1.Bucket{}).
 		Complete(r)
 }

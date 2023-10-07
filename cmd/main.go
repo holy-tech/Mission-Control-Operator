@@ -32,17 +32,15 @@ import (
 	controllerscheme "sigs.k8s.io/controller-runtime/pkg/scheme"
 
 	cpv1 "github.com/crossplane/crossplane/apis/pkg/v1"
-	utils "github.com/holy-tech/Mission-Control-Operator/internal/controller/utils"
-	gcpcomputev1 "github.com/upbound/provider-gcp/apis/compute/v1beta1"
-	gcpstoragev1 "github.com/upbound/provider-gcp/apis/storage/v1beta1"
+	awsv1 "github.com/upbound/provider-aws/apis/v1beta1"
+	azrv1 "github.com/upbound/provider-azure/apis/v1beta1"
 	gcpv1 "github.com/upbound/provider-gcp/apis/v1beta1"
 
 	computev1alpha1 "github.com/holy-tech/Mission-Control-Operator/api/compute/v1alpha1"
 	missionv1alpha1 "github.com/holy-tech/Mission-Control-Operator/api/mission/v1alpha1"
 	storagev1alpha1 "github.com/holy-tech/Mission-Control-Operator/api/storage/v1alpha1"
-	computecontroller "github.com/holy-tech/Mission-Control-Operator/internal/controller/compute"
 	missioncontroler "github.com/holy-tech/Mission-Control-Operator/internal/controller/mission"
-	storagecontroller "github.com/holy-tech/Mission-Control-Operator/internal/controller/storage"
+	missionkeycontroler "github.com/holy-tech/Mission-Control-Operator/internal/controller/missionkey"
 	//+kubebuilder:scaffold:imports
 )
 
@@ -51,44 +49,29 @@ var (
 	setupLog = ctrl.Log.WithName("setup")
 )
 
+func buildScheme(scheme *runtime.Scheme, Group, Version string, Objects ...runtime.Object) {
+	SchemeBuilder := &controllerscheme.Builder{
+		GroupVersion: apischeme.GroupVersion{
+			Group:   Group,
+			Version: Version,
+		},
+	}
+	SchemeBuilder.Register(Objects...)
+	if err := SchemeBuilder.AddToScheme(scheme); err != nil {
+		os.Exit(1)
+	}
+}
+
 func init() {
 	utilruntime.Must(clientgoscheme.AddToScheme(scheme))
 	utilruntime.Must(missionv1alpha1.AddToScheme(scheme))
 	utilruntime.Must(computev1alpha1.AddToScheme(scheme))
 	utilruntime.Must(storagev1alpha1.AddToScheme(scheme))
 
-	crossplaneSchemeBuilder := &controllerscheme.Builder{GroupVersion: apischeme.GroupVersion{Group: "pkg.crossplane.io", Version: "v1"}}
-	crossplaneSchemeBuilder.Register(
-		&cpv1.Provider{},
-		&cpv1.ProviderList{},
-	)
-	gcpSchemeBuilder := &controllerscheme.Builder{GroupVersion: apischeme.GroupVersion{Group: "gcp.upbound.io", Version: "v1beta1"}}
-	gcpSchemeBuilder.Register(
-		&gcpv1.ProviderConfig{},
-		&gcpv1.ProviderConfigList{},
-	)
-	gcpComputeSchemeBuilder := &controllerscheme.Builder{GroupVersion: apischeme.GroupVersion{Group: "compute.gcp.upbound.io", Version: "v1beta1"}}
-	gcpComputeSchemeBuilder.Register(
-		&gcpcomputev1.Instance{},
-		&gcpcomputev1.InstanceList{},
-	)
-	gcpStorageSchemeBuilder := &controllerscheme.Builder{GroupVersion: apischeme.GroupVersion{Group: "storage.gcp.upbound.io", Version: "v1beta1"}}
-	gcpStorageSchemeBuilder.Register(
-		&gcpstoragev1.Bucket{},
-		&gcpstoragev1.BucketList{},
-	)
-	if err := crossplaneSchemeBuilder.AddToScheme(scheme); err != nil {
-		os.Exit(1)
-	}
-	if err := gcpSchemeBuilder.AddToScheme(scheme); err != nil {
-		os.Exit(1)
-	}
-	if err := gcpComputeSchemeBuilder.AddToScheme(scheme); err != nil {
-		os.Exit(1)
-	}
-	if err := gcpStorageSchemeBuilder.AddToScheme(scheme); err != nil {
-		os.Exit(1)
-	}
+	buildScheme(scheme, "pkg.crossplane.io", "v1", &cpv1.Provider{}, &cpv1.ProviderList{})
+	buildScheme(scheme, "gcp.upbound.io", "v1beta1", &gcpv1.ProviderConfig{}, &gcpv1.ProviderConfigList{})
+	buildScheme(scheme, "aws.upbound.io", "v1beta1", &awsv1.ProviderConfig{}, &awsv1.ProviderConfigList{})
+	buildScheme(scheme, "azure.upbound.io", "v1beta1", &azrv1.ProviderConfig{}, &azrv1.ProviderConfigList{})
 	//+kubebuilder:scaffold:scheme
 }
 
@@ -128,31 +111,31 @@ func main() {
 		setupLog.Error(err, "unable to create controller", "controller", "Mission")
 		os.Exit(1)
 	}
-	if err = (&missioncontroler.MissionKeyReconciler{
+	if err = (&missionkeycontroler.MissionKeyReconciler{
 		Client: mgr.GetClient(),
 		Scheme: mgr.GetScheme(),
 	}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "MissionKey")
 		os.Exit(1)
 	}
-	if err = (&computecontroller.VirtualMachineReconciler{
-		MissionClient: utils.MissionClient{
-			Client: mgr.GetClient(),
-		},
-		Scheme: mgr.GetScheme(),
-	}).SetupWithManager(mgr); err != nil {
-		setupLog.Error(err, "unable to create controller", "controller", "VirtualMachine")
-		os.Exit(1)
-	}
-	if err = (&storagecontroller.StorageBucketsReconciler{
-		MissionClient: utils.MissionClient{
-			Client: mgr.GetClient(),
-		},
-		Scheme: mgr.GetScheme(),
-	}).SetupWithManager(mgr); err != nil {
-		setupLog.Error(err, "unable to create controller", "controller", "StorageBuckets")
-		os.Exit(1)
-	}
+	// if err = (&computecontroller.VirtualMachineReconciler{
+	// 	MissionClient: utils.MissionClient{
+	// 		Client: mgr.GetClient(),
+	// 	},
+	// 	Scheme: mgr.GetScheme(),
+	// }).SetupWithManager(mgr); err != nil {
+	// 	setupLog.Error(err, "unable to create controller", "controller", "VirtualMachine")
+	// 	os.Exit(1)
+	// }
+	// if err = (&storagecontroller.StorageBucketsReconciler{
+	// 	MissionClient: utils.MissionClient{
+	// 		Client: mgr.GetClient(),
+	// 	},
+	// 	Scheme: mgr.GetScheme(),
+	// }).SetupWithManager(mgr); err != nil {
+	// 	setupLog.Error(err, "unable to create controller", "controller", "StorageBuckets")
+	// 	os.Exit(1)
+	// }
 	//+kubebuilder:scaffold:builder
 
 	if err := mgr.AddHealthzCheck("healthz", healthz.Ping); err != nil {

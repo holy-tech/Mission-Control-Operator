@@ -14,20 +14,16 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package missioncontroller
+package missionkeycontroller
 
 import (
 	"context"
-	"reflect"
 
 	v1 "k8s.io/api/core/v1"
-	k8serrors "k8s.io/apimachinery/pkg/api/errors"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	runtime "k8s.io/apimachinery/pkg/runtime"
 
 	ctrl "sigs.k8s.io/controller-runtime"
 	client "sigs.k8s.io/controller-runtime/pkg/client"
-	controllerutil "sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 	reconcile "sigs.k8s.io/controller-runtime/pkg/reconcile"
 
 	missionv1alpha1 "github.com/holy-tech/Mission-Control-Operator/api/mission/v1alpha1"
@@ -50,48 +46,26 @@ func (r *MissionKeyReconciler) Reconcile(ctx context.Context, req ctrl.Request) 
 		return ctrl.Result{}, err
 	}
 
-	// Check if secret and service account still exists if not create.
-	secret := v1.Secret{
-		Data: map[string][]byte{"creds": key.Spec.Data},
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      req.Name,
-			Namespace: req.Namespace,
-		},
-	}
-	sa := v1.ServiceAccount{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      req.Name,
-			Namespace: req.Namespace,
-		},
-	}
-	if err := controllerutil.SetControllerReference(key, &secret, r.Scheme); err != nil {
+	if err := r.CreateSecret(ctx, req, key); err != nil {
 		return ctrl.Result{}, err
 	}
-	if err := controllerutil.SetControllerReference(key, &sa, r.Scheme); err != nil {
+	if err := r.CreateServiceAccount(ctx, req, key); err != nil {
 		return ctrl.Result{}, err
 	}
-	if err := r.Get(ctx, req.NamespacedName, &secret); err != nil {
-		if k8serrors.IsNotFound(err) {
-			return ctrl.Result{}, r.Create(ctx, &secret)
-		}
-		return ctrl.Result{}, err
-	} else if !reflect.DeepEqual(key.Spec.Data, secret.Data["creds"]) {
-		secret.Data = map[string][]byte{"creds": key.Spec.Data}
-		return ctrl.Result{}, r.Update(ctx, &secret)
-	}
-	if err = r.Get(ctx, req.NamespacedName, &sa); err != nil {
-		if k8serrors.IsNotFound(err) {
-			return ctrl.Result{}, r.Create(ctx, &sa)
-		}
-		return ctrl.Result{}, err
+	if err := r.ManageFinalizer(key); err != nil {
+		return reconcile.Result{}, err
 	}
 
+	return ctrl.Result{}, nil
+}
+
+func (r *MissionKeyReconciler) ManageFinalizer(key *missionv1alpha1.MissionKey) error {
 	keyFinalizer := key.Spec.Name
 	if key.ObjectMeta.DeletionTimestamp.IsZero() {
 		if !utils.Contains(key.ObjectMeta.Finalizers, keyFinalizer) {
 			key.ObjectMeta.Finalizers = append(key.ObjectMeta.Finalizers, keyFinalizer)
 			if err := r.Update(context.Background(), key); err != nil {
-				return reconcile.Result{}, err
+				return err
 			}
 		}
 	}
@@ -100,11 +74,10 @@ func (r *MissionKeyReconciler) Reconcile(ctx context.Context, req ctrl.Request) 
 
 		key.ObjectMeta.Finalizers = utils.RemoveString(key.ObjectMeta.Finalizers, keyFinalizer)
 		if err := r.Update(context.Background(), key); err != nil {
-			return reconcile.Result{}, err
+			return err
 		}
 	}
-
-	return ctrl.Result{}, nil
+	return nil
 }
 
 func (r *MissionKeyReconciler) SetupWithManager(mgr ctrl.Manager) error {

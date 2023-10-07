@@ -25,9 +25,14 @@ type ProviderData struct {
 	Location string `json:"location,omitempty"`
 }
 
+type StorageBucketMissionRef struct {
+	MissionName string `json:"missionName,omitempty"`
+	MissionKey  string `json:"keyName,omitempty"`
+}
+
 type StorageBucketsSpec struct {
-	MissionRef  string       `json:"missionRef,omitempty"`
-	ForProvider ProviderData `json:"forProvider,omitempty"`
+	MissionRef  StorageBucketMissionRef `json:"missionRef,omitempty"`
+	ForProvider ProviderData            `json:"forProvider,omitempty"`
 }
 
 type StorageBucketsStatus struct {

@@ -31,21 +31,21 @@ type MissionClient struct {
 	client.Client
 }
 
-func (r *MissionClient) GetMission(ctx context.Context, missionName, missionNamespace string) (v1alpha1.Mission, error) {
+func (r *MissionClient) GetMission(ctx context.Context, missionName, missionNamespace string) (*v1alpha1.Mission, error) {
 	mission := v1alpha1.Mission{}
 	err := r.Get(ctx, types.NamespacedName{Name: missionName, Namespace: missionNamespace}, &mission)
-	return mission, err
+	return &mission, err
 }
 
-func (r *MissionClient) GetMissionKey(ctx context.Context, mission v1alpha1.Mission, provider string) (v1alpha1.MissionKey, error) {
+func (r *MissionClient) GetMissionKey(ctx context.Context, mission *v1alpha1.Mission, keyName string) (*v1alpha1.MissionKey, error) {
 	for _, pkg := range mission.Spec.Packages {
 		missionkey := v1alpha1.MissionKey{}
-		if pkg.Provider != provider {
+		if pkg.Credentials.Name != keyName {
 			continue
 		}
-		err := r.Get(ctx, types.NamespacedName{Name: pkg.Credentials.Name, Namespace: "default"}, &missionkey)
-		return missionkey, err
+		err := r.Get(ctx, types.NamespacedName{Name: pkg.Credentials.Name}, &missionkey)
+		return &missionkey, err
 	}
-	msg := fmt.Sprintf("No credentials for provider %s", provider)
-	return v1alpha1.MissionKey{}, errors.New(msg)
+	msg := fmt.Sprintf("No credentials %s", keyName)
+	return &v1alpha1.MissionKey{}, errors.New(msg)
 }

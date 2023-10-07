@@ -18,26 +18,20 @@ package compute
 
 import (
 	"context"
-	"reflect"
 
-	k8serrors "k8s.io/apimachinery/pkg/api/errors"
-	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	runtime "k8s.io/apimachinery/pkg/runtime"
-	types "k8s.io/apimachinery/pkg/types"
+	record "k8s.io/client-go/tools/record"
 	ctrl "sigs.k8s.io/controller-runtime"
-	controllerutil "sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
-	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 
-	cpcommonv1 "github.com/crossplane/crossplane-runtime/apis/common/v1"
 	computev1alpha1 "github.com/holy-tech/Mission-Control-Operator/api/compute/v1alpha1"
-	v1alpha1 "github.com/holy-tech/Mission-Control-Operator/api/mission/v1alpha1"
 	utils "github.com/holy-tech/Mission-Control-Operator/internal/controller/utils"
 	gcpcomputev1 "github.com/upbound/provider-gcp/apis/compute/v1beta1"
 )
 
 type VirtualMachineReconciler struct {
 	utils.MissionClient
-	Scheme *runtime.Scheme
+	Scheme   *runtime.Scheme
+	Recorder record.EventRecorder
 }
 
 //+kubebuilder:rbac:groups=compute.mission-control.apis.io,resources=virtualmachines,verbs=get;list;watch;create;update;patch;delete
@@ -51,55 +45,12 @@ func (r *VirtualMachineReconciler) Reconcile(ctx context.Context, req ctrl.Reque
 		return ctrl.Result{}, err
 	}
 
-	mission, err := r.GetMission(ctx, vm.Spec.MissionRef, req.Namespace)
+	mission, err := r.GetMission(ctx, vm.Spec.MissionRef.MissionName, req.Namespace)
 	if err != nil {
 		return ctrl.Result{}, err
 	}
-	result, err := r.ReconcileVirtualMachine(ctx, vm, &mission)
-	return result, err
-}
-
-func (r *VirtualMachineReconciler) ReconcileVirtualMachine(ctx context.Context, vm *computev1alpha1.VirtualMachine, mission *v1alpha1.Mission) (ctrl.Result, error) {
-	// Create virtual machine config
-	currentgcpvm := gcpcomputev1.Instance{}
-	gcpvm := gcpcomputev1.Instance{
-		ObjectMeta: v1.ObjectMeta{
-			Name: vm.Spec.ForProvider.Name,
-		},
-		Spec: gcpcomputev1.InstanceSpec{
-			ForProvider: gcpcomputev1.InstanceParameters{
-				Zone:        &vm.Spec.ForProvider.Zone,
-				MachineType: &vm.Spec.ForProvider.MachineType,
-				BootDisk: []gcpcomputev1.BootDiskParameters{{
-					InitializeParams: []gcpcomputev1.InitializeParamsParameters{{
-						Image: &vm.Spec.ForProvider.Image,
-					}},
-				}},
-				NetworkInterface: []gcpcomputev1.NetworkInterfaceParameters{{
-					Network: &vm.Spec.ForProvider.Network,
-				}},
-			},
-			ResourceSpec: cpcommonv1.ResourceSpec{
-				ProviderConfigReference: &cpcommonv1.Reference{
-					Name: "gcloud-provider",
-				},
-			},
-		},
-	}
-	if err := controllerutil.SetControllerReference(vm, &gcpvm, r.Scheme); err != nil {
-		return ctrl.Result{}, err
-	}
-	err := r.Get(ctx, types.NamespacedName{Name: vm.Spec.ForProvider.Name}, &currentgcpvm)
-	if err != nil {
-		if k8serrors.IsNotFound(err) {
-			return ctrl.Result{}, r.Create(ctx, &gcpvm)
-		}
-		return ctrl.Result{}, err
-	}
-	if reflect.DeepEqual(currentgcpvm.Spec, gcpvm.Spec) {
-		return ctrl.Result{}, nil
-	}
-	return reconcile.Result{}, r.Update(ctx, &currentgcpvm)
+	err = r.ReconcileVirtualMachine(ctx, mission, vm)
+	return ctrl.Result{}, err
 }
 
 func (r *VirtualMachineReconciler) SetupWithManager(mgr ctrl.Manager) error {

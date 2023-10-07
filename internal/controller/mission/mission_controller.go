@@ -19,30 +19,22 @@ package missioncontroller
 import (
 	"context"
 	"errors"
-	"fmt"
 	"os"
-	"reflect"
-	"strings"
 
 	apiextensionsv1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
 	apiextensionsclientset "k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset"
-	k8serrors "k8s.io/apimachinery/pkg/api/errors"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	runtime "k8s.io/apimachinery/pkg/runtime"
-	types "k8s.io/apimachinery/pkg/types"
 	clientcmd "k8s.io/client-go/tools/clientcmd"
 	record "k8s.io/client-go/tools/record"
 
 	ctrl "sigs.k8s.io/controller-runtime"
 	client "sigs.k8s.io/controller-runtime/pkg/client"
-	controllerutil "sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 
-	xpv1 "github.com/crossplane/crossplane-runtime/apis/common/v1"
 	cpv1 "github.com/crossplane/crossplane/apis/pkg/v1"
 	gcpv1 "github.com/upbound/provider-gcp/apis/v1beta1"
 
 	missionv1alpha1 "github.com/holy-tech/Mission-Control-Operator/api/mission/v1alpha1"
-	utils "github.com/holy-tech/Mission-Control-Operator/internal/controller/utils"
 )
 
 type MissionReconciler struct {
@@ -52,8 +44,8 @@ type MissionReconciler struct {
 }
 
 var ProviderMapping = map[string]string{
-	"GCP":   "provider-gcp",
-	"AWS":   "",
+	"GCP":   "provider-gcp-family",
+	"AWS":   "provider-aws-family",
 	"AZURE": "",
 }
 
@@ -64,85 +56,31 @@ var ProviderMapping = map[string]string{
 
 func (r *MissionReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	mission := &missionv1alpha1.Mission{}
-	err := r.Get(ctx, req.NamespacedName, mission)
-	if err != nil {
+	if err := r.Get(ctx, req.NamespacedName, mission); err != nil {
 		return ctrl.Result{}, err
 	}
-
 	// Confirm that crossplane is installed in the kubernetes cluster
 	if _, err := r.ConfirmCRD(ctx, "providers.pkg.crossplane.io"); err != nil {
 		r.Recorder.Event(mission, "Warning", "Failed", "Crossplane installation not found")
 		return ctrl.Result{}, errors.New("could not find crossplane CRD \"Provider\"")
 	}
-
 	// Check that the providers being used in specified mission are installed in the cluster and are supported
-	for _, p := range mission.Spec.Packages {
-		if !utils.Contains(utils.GetSupportedProviders(), p.Provider) {
-			message := fmt.Sprintf("Provider %s is not supported, please use one of %v", p.Provider, utils.GetSupportedProviders())
-			err := errors.New(message)
-			return ctrl.Result{}, err
-		}
-		err := r.ConfirmProvider(ctx, mission, p.Provider)
-		if err != nil {
-			return ctrl.Result{}, err
-		}
+	if err := r.ConfirmProvider(ctx, mission); err != nil {
+		return ctrl.Result{}, err
 	}
-
 	r.Recorder.Event(mission, "Normal", "Success", "Mission correctly connected to Crossplane")
 
 	// Create ProviderConfig that resources will reference.
-	for _, pkg := range mission.Spec.Packages {
-		err = r.ReconcileProviderConfig(ctx, &pkg, mission)
-		if err != nil {
-			r.Recorder.Event(mission, "Warning", "ProviderConfig not created", "Could not correctly create ProviderConfig resource.")
-			return ctrl.Result{}, err
-		}
+	if err := r.ReconcileProviderConfigs(ctx, mission); err != nil {
+		return ctrl.Result{}, err
 	}
 	r.Recorder.Event(mission, "Normal", "Success", "ProviderConfig correctly created")
 
 	// Confirm that mission key exists, if not create warning.
-	for _, pkg := range mission.Spec.Packages {
-		key := &missionv1alpha1.MissionKey{}
-		err := r.Get(ctx, types.NamespacedName{Name: pkg.Credentials.Name, Namespace: pkg.Credentials.Namespace}, key)
-		if err != nil {
-			if !k8serrors.IsNotFound(err) {
-				r.Recorder.Event(mission, "Warning", "Error looking for MissionKey", "Unexpected error while looking for MissionKey.")
-				return ctrl.Result{}, err
-			}
-			message := fmt.Sprintf("Provider %s: Please ensure that MissionKey \"%s\" exists in namespace \"%s\".", pkg.Provider, pkg.Credentials.Name, pkg.Credentials.Namespace)
-			r.Recorder.Event(mission, "Warning", "MissionKey not found", message)
-		} else {
-			r.Recorder.Event(mission, "Normal", "Success", "MissionKey correctly linked.")
-		}
+	if err := r.ConfirmMissionKeys(ctx, mission); err != nil {
+		return ctrl.Result{}, err
 	}
 	return ctrl.Result{}, nil
-}
-
-func (r *MissionReconciler) ConfirmProvider(ctx context.Context, mission *missionv1alpha1.Mission, providerName string) error {
-	if utils.Contains(utils.GetValues(ProviderMapping), providerName) {
-		k8providerName := ProviderMapping[providerName]
-		p, err := r.GetProvider(ctx, k8providerName)
-		if err != nil {
-			message := fmt.Sprintf("Could not find provider %s, ensure provider is installed", k8providerName)
-			r.Recorder.Event(mission, "Warning", "Provider Not Installed", message)
-			return errors.New(message)
-		}
-		err = r.ReconcilePackageStatus(ctx, mission, p)
-		if err != nil {
-			return err
-		}
-	} else {
-		message := fmt.Sprintf("Provider not allowed please choose of the following (%v)", utils.GetValues(ProviderMapping))
-		r.Recorder.Event(mission, "Warning", "Provider Not Known", message)
-		return errors.New(message)
-	}
-	return nil
-}
-
-func (r *MissionReconciler) GetProvider(ctx context.Context, providerName string) (*cpv1.Provider, error) {
-	p := &cpv1.Provider{}
-	err := r.Get(ctx, types.NamespacedName{Name: providerName}, p)
-	return p, err
 }
 
 func (r *MissionReconciler) ConfirmCRD(ctx context.Context, crdNameVersion string) (*apiextensionsv1.CustomResourceDefinition, error) {
@@ -164,44 +102,6 @@ func (r *MissionReconciler) ReconcilePackageStatus(ctx context.Context, mission 
 	}
 	mission.Status.PackageStatus[provider.Name] = ps
 	return r.Status().Update(ctx, mission)
-}
-
-func (r *MissionReconciler) ReconcileProviderConfig(ctx context.Context, pkg *missionv1alpha1.PackageConfig, mission *missionv1alpha1.Mission) error {
-	providerName := mission.Name + "-" + strings.ToLower(pkg.Provider)
-	providerConfig := &gcpv1.ProviderConfig{}
-	expectedProviderConfig := &gcpv1.ProviderConfig{
-		ObjectMeta: v1.ObjectMeta{
-			Name: providerName,
-		},
-		Spec: gcpv1.ProviderConfigSpec{
-			ProjectID: pkg.ProjectID,
-			Credentials: gcpv1.ProviderCredentials{
-				Source: xpv1.CredentialsSourceSecret,
-				CommonCredentialSelectors: xpv1.CommonCredentialSelectors{
-					SecretRef: &xpv1.SecretKeySelector{
-						Key: pkg.Credentials.Key,
-						SecretReference: xpv1.SecretReference{
-							Name:      pkg.Credentials.Name,
-							Namespace: pkg.Credentials.Namespace,
-						},
-					},
-				},
-			},
-		},
-	}
-	if err := controllerutil.SetControllerReference(mission, expectedProviderConfig, r.Scheme); err != nil {
-		return err
-	}
-	if err := r.Get(ctx, types.NamespacedName{Name: providerName}, providerConfig); err != nil {
-		if k8serrors.IsNotFound(err) {
-			return r.Create(ctx, expectedProviderConfig)
-		}
-	} else if !reflect.DeepEqual(providerConfig, expectedProviderConfig) {
-		providerConfig.Spec = expectedProviderConfig.Spec
-		err := r.Update(ctx, providerConfig)
-		return err
-	}
-	return nil
 }
 
 func (r *MissionReconciler) SetupWithManager(mgr ctrl.Manager) error {
