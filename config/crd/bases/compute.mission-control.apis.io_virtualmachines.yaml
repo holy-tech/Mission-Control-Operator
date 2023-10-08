@@ -47,7 +47,12 @@ spec:
                     type: string
                 type: object
               missionRef:
-                type: string
+                properties:
+                  keyName:
+                    type: string
+                  missionName:
+                    type: string
+                type: object
             type: object
           status:
             type: object
