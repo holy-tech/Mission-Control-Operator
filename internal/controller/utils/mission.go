@@ -31,9 +31,9 @@ type MissionClient struct {
 	client.Client
 }
 
-func (r *MissionClient) GetMission(ctx context.Context, missionName, missionNamespace string) (*v1alpha1.Mission, error) {
+func (r *MissionClient) GetMission(ctx context.Context, missionName string) (*v1alpha1.Mission, error) {
 	mission := v1alpha1.Mission{}
-	err := r.Get(ctx, types.NamespacedName{Name: missionName, Namespace: missionNamespace}, &mission)
+	err := r.Get(ctx, types.NamespacedName{Name: missionName}, &mission)
 	return &mission, err
 }
 
