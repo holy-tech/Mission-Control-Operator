@@ -57,11 +57,11 @@ func (r *MissionReconciler) ReconcileProviderConfigs(ctx context.Context, missio
 
 func (r *MissionReconciler) ReconcileProviderConfigByProvider(ctx context.Context, mission *missionv1alpha1.Mission, pkg *missionv1alpha1.PackageConfig) error {
 	var err error
-	if pkg.Provider == "GCP" {
+	if pkg.Provider == "gcp" {
 		err = r.GetProviderConfigGCP(ctx, pkg, mission)
-	} else if pkg.Provider == "AWS" {
+	} else if pkg.Provider == "aws" {
 		err = r.GetProviderConfigAWS(ctx, pkg, mission)
-	} else if pkg.Provider == "AZURE" {
+	} else if pkg.Provider == "azure" {
 		err = r.GetProviderConfigAzure(ctx, pkg, mission)
 	} else {
 		message := fmt.Sprintf("Provider %s not known", pkg.Provider)

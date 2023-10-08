@@ -51,9 +51,9 @@ func (r *VirtualMachineReconciler) ReconcileVirtualMachine(ctx context.Context, 
 func (r *VirtualMachineReconciler) ReconcileVirtualMachineByProvider(ctx context.Context, mission *v1alpha1.Mission, missionKey *v1alpha1.MissionKey, vm *computev1alpha1.VirtualMachine) error {
 	var err error
 	pkg := mission.Spec.Packages[0]
-	if pkg.Provider == "GCP" {
+	if pkg.Provider == "gcp" {
 		err = r.GetVirtualMachineGCP(ctx, mission, vm)
-	} else if pkg.Provider == "AWS" {
+	} else if pkg.Provider == "aws" {
 		err = r.GetVirtualMachineAWS(ctx, mission, vm)
 	} else {
 		message := fmt.Sprintf("Provider %s not known", pkg.Provider)
