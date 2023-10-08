@@ -44,9 +44,9 @@ type MissionReconciler struct {
 }
 
 var ProviderMapping = map[string]string{
-	"GCP":   "provider-gcp-family",
-	"AWS":   "provider-aws-family",
-	"AZURE": "",
+	"gcp":   "provider-gcp-family",
+	"aws":   "provider-aws-family",
+	"azure": "",
 }
 
 //+kubebuilder:rbac:groups=mission.mission-control.apis.io,resources=missions,verbs=get;list;watch;create;update;patch;delete

@@ -21,7 +21,6 @@ import (
 	"errors"
 	"fmt"
 	"reflect"
-	"strings"
 
 	k8serrors "k8s.io/apimachinery/pkg/api/errors"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -79,7 +78,7 @@ func (r *StorageBucketsReconciler) GetStorageBucketGCP(ctx context.Context, miss
 			},
 			ResourceSpec: cpcommonv1.ResourceSpec{
 				ProviderConfigReference: &cpcommonv1.Reference{
-					Name: mission.GetName() + "-" + strings.ToLower("GCP"),
+					Name: mission.GetName() + "-gcp",
 				},
 			},
 		},
@@ -112,7 +111,7 @@ func (r *StorageBucketsReconciler) GetStorageBucketAWS(ctx context.Context, miss
 			},
 			ResourceSpec: cpcommonv1.ResourceSpec{
 				ProviderConfigReference: &cpcommonv1.Reference{
-					Name: mission.GetName() + "-" + strings.ToLower("AWS"),
+					Name: mission.GetName() + "-aws",
 				},
 			},
 		},

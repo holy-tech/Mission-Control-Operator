@@ -17,5 +17,5 @@ limitations under the License.
 package utils
 
 func GetSupportedProviders() []string {
-	return []string{"GCP", "AWS"}
+	return []string{"gcp", "aws"}
 }
