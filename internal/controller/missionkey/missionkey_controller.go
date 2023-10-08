@@ -18,9 +18,12 @@ package missionkeycontroller
 
 import (
 	"context"
+	"errors"
+	"fmt"
 
 	v1 "k8s.io/api/core/v1"
 	runtime "k8s.io/apimachinery/pkg/runtime"
+	record "k8s.io/client-go/tools/record"
 
 	ctrl "sigs.k8s.io/controller-runtime"
 	client "sigs.k8s.io/controller-runtime/pkg/client"
@@ -32,7 +35,8 @@ import (
 
 type MissionKeyReconciler struct {
 	client.Client
-	Scheme *runtime.Scheme
+	Scheme   *runtime.Scheme
+	Recorder record.EventRecorder
 }
 
 //+kubebuilder:rbac:groups=mission.mission-control.apis.io,resources=missionkeys,verbs=get;list;watch;create;update;patch;delete
@@ -46,6 +50,12 @@ func (r *MissionKeyReconciler) Reconcile(ctx context.Context, req ctrl.Request) 
 		return ctrl.Result{}, err
 	}
 
+	if !utils.Contains(utils.GetSupportedProviders(), key.Spec.Type) {
+		message := fmt.Sprintf("Key of provider type %s is not supported, please use one of %v", key.Spec.Type, utils.GetSupportedProviders())
+		err := errors.New(message)
+		r.Recorder.Event(key, "Warning", "Failed", message)
+		return ctrl.Result{}, err
+	}
 	if err := r.CreateSecret(ctx, req, key); err != nil {
 		return ctrl.Result{}, err
 	}
