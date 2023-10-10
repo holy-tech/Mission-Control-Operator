@@ -79,3 +79,28 @@ var _ = Describe("AWS Mission controller", func() {
 		})
 	})
 })
+
+var _ = Describe("Azure Mission controller", func() {
+	Context("Creating Azure Mission", func() {
+		It("Should apply azure mission definition", func() {
+			By("Creating new azure mission")
+			ctx := context.Background()
+			mission := &missionv1alpha1.Mission{
+				ObjectMeta: metav1.ObjectMeta{
+					Name: "mission-sample-azure",
+				},
+				Spec: missionv1alpha1.MissionSpec{
+					Packages: []missionv1alpha1.PackageConfig{{
+						Provider: "azure",
+						Credentials: missionv1alpha1.CredentialConfig{
+							Name:      "missionkey-sample-azure",
+							Namespace: "default",
+							Key:       "creds",
+						},
+					}},
+				},
+			}
+			Expect(k8sClient.Create(ctx, mission)).Should(Succeed())
+		})
+	})
+})
