@@ -35,7 +35,6 @@ var _ = Describe("GCP Mission controller", func() {
 			By("Creating new gcp mission")
 			ctx := context.Background()
 			mission := &missionv1alpha1.Mission{
-				// TypeMeta: metav1.TypeMeta{},
 				ObjectMeta: metav1.ObjectMeta{
 					Name: "mission-sample-gcp",
 				},
@@ -45,6 +44,31 @@ var _ = Describe("GCP Mission controller", func() {
 						ProjectID: "made-up-project-id",
 						Credentials: missionv1alpha1.CredentialConfig{
 							Name:      "missionkey-sample-gcp",
+							Namespace: "default",
+							Key:       "creds",
+						},
+					}},
+				},
+			}
+			Expect(k8sClient.Create(ctx, mission)).Should(Succeed())
+		})
+	})
+})
+
+var _ = Describe("AWS Mission controller", func() {
+	Context("Creating AWS Mission", func() {
+		It("Should apply aws mission definition", func() {
+			By("Creating new aws mission")
+			ctx := context.Background()
+			mission := &missionv1alpha1.Mission{
+				ObjectMeta: metav1.ObjectMeta{
+					Name: "mission-sample-aws",
+				},
+				Spec: missionv1alpha1.MissionSpec{
+					Packages: []missionv1alpha1.PackageConfig{{
+						Provider: "aws",
+						Credentials: missionv1alpha1.CredentialConfig{
+							Name:      "missionkey-sample-aws",
 							Namespace: "default",
 							Key:       "creds",
 						},
