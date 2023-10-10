@@ -24,10 +24,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	missionv1alpha1 "github.com/holy-tech/Mission-Control-Operator/api/mission/v1alpha1"
-	"sigs.k8s.io/controller-runtime/pkg/client"
 )
-
-var c client.Client
 
 var _ = Describe("GCP Mission controller", func() {
 	Context("Creating GCP Mission", func() {
