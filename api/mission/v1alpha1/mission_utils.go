@@ -27,3 +27,7 @@ func (m *Mission) AWSVerify() bool {
 func (m *Mission) AzureVerify() bool {
 	return true
 }
+
+func (m *Mission) GenericVerify() bool {
+	return true
+}
