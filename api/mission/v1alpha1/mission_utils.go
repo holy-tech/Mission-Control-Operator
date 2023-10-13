@@ -101,12 +101,11 @@ func (m *Mission) Convert2Azure(name string, pkg *PackageConfig) *azrv1.Provider
 }
 
 func (m *Mission) GCPVerify(packageId int) error {
-	m.GenericVerify()
 	pkg := m.Spec.Packages[packageId]
 	if pkg.ProjectID == "" {
 		return errors.New("Project Id not filled for GCP package.")
 	}
-	return nil
+	return m.GenericVerify()
 }
 
 func (m *Mission) AWSVerify() error {
