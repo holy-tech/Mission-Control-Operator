@@ -45,8 +45,8 @@ type ProviderConfigInterface interface {
 }
 
 func (r *MissionReconciler) ReconcileProviderConfigs(ctx context.Context, mission *missionv1alpha1.Mission) error {
-	for _, pkg := range mission.Spec.Packages {
-		err := r.ReconcileProviderConfigByProvider(ctx, mission, &pkg)
+	for i, pkg := range mission.Spec.Packages {
+		err := r.ReconcileProviderConfigByProvider(ctx, mission, i, &pkg)
 		if err != nil {
 			r.Recorder.Event(mission, "Warning", "ProviderConfig not created", "Could not correctly create ProviderConfig resource.")
 			return err
@@ -55,14 +55,26 @@ func (r *MissionReconciler) ReconcileProviderConfigs(ctx context.Context, missio
 	return nil
 }
 
-func (r *MissionReconciler) ReconcileProviderConfigByProvider(ctx context.Context, mission *missionv1alpha1.Mission, pkg *missionv1alpha1.PackageConfig) error {
+func (r *MissionReconciler) ReconcileProviderConfigByProvider(ctx context.Context, mission *missionv1alpha1.Mission, packageId int, pkg *missionv1alpha1.PackageConfig) error {
 	var err error
 	if pkg.Provider == "gcp" {
-		err = r.GetProviderConfigGCP(ctx, pkg, mission)
+		err = mission.GCPVerify(packageId)
+		if err != nil {
+			return err
+		}
+		err = r.GetProviderConfigGCP(ctx, mission, pkg)
 	} else if pkg.Provider == "aws" {
-		err = r.GetProviderConfigAWS(ctx, pkg, mission)
+		err = mission.AWSVerify()
+		if err != nil {
+			return err
+		}
+		err = r.GetProviderConfigAWS(ctx, mission, pkg)
 	} else if pkg.Provider == "azure" {
-		err = r.GetProviderConfigAzure(ctx, pkg, mission)
+		err = mission.AzureVerify()
+		if err != nil {
+			return err
+		}
+		err = r.GetProviderConfigAzure(ctx, mission, pkg)
 	} else {
 		message := fmt.Sprintf("Provider %s not known", pkg.Provider)
 		err = errors.New(message)
@@ -73,7 +85,7 @@ func (r *MissionReconciler) ReconcileProviderConfigByProvider(ctx context.Contex
 	return nil
 }
 
-func (r *MissionReconciler) GetProviderConfigGCP(ctx context.Context, pkg *missionv1alpha1.PackageConfig, mission *missionv1alpha1.Mission) error {
+func (r *MissionReconciler) GetProviderConfigGCP(ctx context.Context, mission *missionv1alpha1.Mission, pkg *missionv1alpha1.PackageConfig) error {
 	providerName := mission.Name + "-" + strings.ToLower(pkg.Provider)
 	providerConfig := &gcpv1.ProviderConfig{}
 	expectedProviderConfig := &gcpv1.ProviderConfig{
@@ -117,7 +129,7 @@ func (r *MissionReconciler) GetProviderConfigGCP(ctx context.Context, pkg *missi
 	return nil
 }
 
-func (r *MissionReconciler) GetProviderConfigAWS(ctx context.Context, pkg *missionv1alpha1.PackageConfig, mission *missionv1alpha1.Mission) error {
+func (r *MissionReconciler) GetProviderConfigAWS(ctx context.Context, mission *missionv1alpha1.Mission, pkg *missionv1alpha1.PackageConfig) error {
 	providerName := mission.Name + "-" + strings.ToLower(pkg.Provider)
 	providerConfig := &awsv1.ProviderConfig{}
 	expectedProviderConfig := &awsv1.ProviderConfig{
@@ -156,7 +168,7 @@ func (r *MissionReconciler) GetProviderConfigAWS(ctx context.Context, pkg *missi
 	return nil
 }
 
-func (r *MissionReconciler) GetProviderConfigAzure(ctx context.Context, pkg *missionv1alpha1.PackageConfig, mission *missionv1alpha1.Mission) error {
+func (r *MissionReconciler) GetProviderConfigAzure(ctx context.Context, mission *missionv1alpha1.Mission, pkg *missionv1alpha1.PackageConfig) error {
 	providerName := mission.Name + "-" + strings.ToLower(pkg.Provider)
 	providerConfig := &azrv1.ProviderConfig{}
 	expectedProviderConfig := &azrv1.ProviderConfig{
