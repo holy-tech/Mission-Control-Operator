@@ -20,28 +20,20 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"reflect"
+
+	// "reflect"
 	"strings"
 
 	k8serrors "k8s.io/apimachinery/pkg/api/errors"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	runtime "k8s.io/apimachinery/pkg/runtime"
 	types "k8s.io/apimachinery/pkg/types"
 	controllerutil "sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 
 	missionv1alpha1 "github.com/holy-tech/Mission-Control-Operator/api/mission/v1alpha1"
+	"github.com/holy-tech/Mission-Control-Operator/internal/controller/utils"
 	awsv1 "github.com/upbound/provider-aws/apis/v1beta1"
 	azrv1 "github.com/upbound/provider-azure/apis/v1beta1"
 	gcpv1 "github.com/upbound/provider-gcp/apis/v1beta1"
 )
-
-type ProviderConfigInterface interface {
-	metav1.Object
-	runtime.Object
-
-	GetSpec()
-	SetSpec()
-}
 
 func (r *MissionReconciler) ReconcileProviderConfigs(ctx context.Context, mission *missionv1alpha1.Mission) error {
 	for i, pkg := range mission.Spec.Packages {
@@ -88,48 +80,24 @@ func (r *MissionReconciler) GetProviderConfigGCP(ctx context.Context, mission *m
 	providerName := mission.Name + "-" + strings.ToLower(pkg.Provider)
 	providerConfig := &gcpv1.ProviderConfig{}
 	expectedProviderConfig := mission.Convert2GCP(providerName, pkg)
-	if err := controllerutil.SetControllerReference(mission, expectedProviderConfig, r.Scheme); err != nil {
-		return err
-	}
-	if err := r.Get(ctx, types.NamespacedName{Name: expectedProviderConfig.GetName()}, providerConfig); err != nil {
-		if k8serrors.IsNotFound(err) {
-			return r.Create(ctx, expectedProviderConfig)
-		}
-	} else if !reflect.DeepEqual(providerConfig.Spec, expectedProviderConfig.Spec) {
-		expectedProviderConfig.SetUID(providerConfig.GetUID())
-		expectedProviderConfig.SetResourceVersion(providerConfig.GetResourceVersion())
-		providerConfig.Spec = expectedProviderConfig.Spec
-		err := r.Update(ctx, providerConfig)
-		return err
-	}
-	return nil
+	return r.ProviderConfigApply(ctx, mission, providerConfig, expectedProviderConfig)
 }
 
 func (r *MissionReconciler) GetProviderConfigAWS(ctx context.Context, mission *missionv1alpha1.Mission, pkg *missionv1alpha1.PackageConfig) error {
 	providerName := mission.Name + "-" + strings.ToLower(pkg.Provider)
 	providerConfig := &awsv1.ProviderConfig{}
 	expectedProviderConfig := mission.Convert2AWS(providerName, pkg)
-	if err := controllerutil.SetControllerReference(mission, expectedProviderConfig, r.Scheme); err != nil {
-		return err
-	}
-	if err := r.Get(ctx, types.NamespacedName{Name: expectedProviderConfig.GetName()}, providerConfig); err != nil {
-		if k8serrors.IsNotFound(err) {
-			return r.Create(ctx, expectedProviderConfig)
-		}
-	} else if !reflect.DeepEqual(providerConfig.Spec, expectedProviderConfig.Spec) {
-		expectedProviderConfig.SetUID(providerConfig.GetUID())
-		expectedProviderConfig.SetResourceVersion(providerConfig.GetResourceVersion())
-		providerConfig.Spec = expectedProviderConfig.Spec
-		err := r.Update(ctx, providerConfig)
-		return err
-	}
-	return nil
+	return r.ProviderConfigApply(ctx, mission, providerConfig, expectedProviderConfig)
 }
 
 func (r *MissionReconciler) GetProviderConfigAzure(ctx context.Context, mission *missionv1alpha1.Mission, pkg *missionv1alpha1.PackageConfig) error {
 	providerName := mission.Name + "-" + strings.ToLower(pkg.Provider)
 	providerConfig := &azrv1.ProviderConfig{}
 	expectedProviderConfig := mission.Convert2Azure(providerName, pkg)
+	return r.ProviderConfigApply(ctx, mission, providerConfig, expectedProviderConfig)
+}
+
+func (r *MissionReconciler) ProviderConfigApply(ctx context.Context, mission *missionv1alpha1.Mission, providerConfig, expectedProviderConfig utils.MissionObject) error {
 	if err := controllerutil.SetControllerReference(mission, expectedProviderConfig, r.Scheme); err != nil {
 		return err
 	}
@@ -137,12 +105,12 @@ func (r *MissionReconciler) GetProviderConfigAzure(ctx context.Context, mission 
 		if k8serrors.IsNotFound(err) {
 			return r.Create(ctx, expectedProviderConfig)
 		}
-	} else if !reflect.DeepEqual(providerConfig.Spec, expectedProviderConfig.Spec) {
-		expectedProviderConfig.SetUID(providerConfig.GetUID())
-		expectedProviderConfig.SetResourceVersion(providerConfig.GetResourceVersion())
-		providerConfig.Spec = expectedProviderConfig.Spec
-		err := r.Update(ctx, providerConfig)
-		return err
+		// } else if !reflect.DeepEqual(providerConfig.Spec, expectedProviderConfig.Spec) {
+		// 	expectedProviderConfig.SetUID(providerConfig.GetUID())
+		// 	expectedProviderConfig.SetResourceVersion(providerConfig.GetResourceVersion())
+		// 	providerConfig.Spec = expectedProviderConfig.Spec
+		// 	err := r.Update(ctx, providerConfig)
+		// 	return err
 	}
 	return nil
 }
