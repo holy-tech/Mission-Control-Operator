@@ -17,14 +17,17 @@ limitations under the License.
 package v1alpha1
 
 func (m *Mission) GCPVerify() bool {
+	m.GenericVerify()
 	return true
 }
 
 func (m *Mission) AWSVerify() bool {
+	m.GenericVerify()
 	return true
 }
 
 func (m *Mission) AzureVerify() bool {
+	m.GenericVerify()
 	return true
 }
 
