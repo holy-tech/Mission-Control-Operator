@@ -29,7 +29,6 @@ import (
 	types "k8s.io/apimachinery/pkg/types"
 	controllerutil "sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 
-	xpv1 "github.com/crossplane/crossplane-runtime/apis/common/v1"
 	missionv1alpha1 "github.com/holy-tech/Mission-Control-Operator/api/mission/v1alpha1"
 	awsv1 "github.com/upbound/provider-aws/apis/v1beta1"
 	azrv1 "github.com/upbound/provider-azure/apis/v1beta1"
@@ -88,30 +87,7 @@ func (r *MissionReconciler) ReconcileProviderConfigByProvider(ctx context.Contex
 func (r *MissionReconciler) GetProviderConfigGCP(ctx context.Context, mission *missionv1alpha1.Mission, pkg *missionv1alpha1.PackageConfig) error {
 	providerName := mission.Name + "-" + strings.ToLower(pkg.Provider)
 	providerConfig := &gcpv1.ProviderConfig{}
-	expectedProviderConfig := &gcpv1.ProviderConfig{
-		TypeMeta: metav1.TypeMeta{
-			Kind:       "ProviderConfig",
-			APIVersion: "gcp.upbound.io/v1beta1",
-		},
-		ObjectMeta: metav1.ObjectMeta{
-			Name: providerName,
-		},
-		Spec: gcpv1.ProviderConfigSpec{
-			ProjectID: pkg.ProjectID,
-			Credentials: gcpv1.ProviderCredentials{
-				Source: xpv1.CredentialsSourceSecret,
-				CommonCredentialSelectors: xpv1.CommonCredentialSelectors{
-					SecretRef: &xpv1.SecretKeySelector{
-						Key: pkg.Credentials.Key,
-						SecretReference: xpv1.SecretReference{
-							Name:      pkg.Credentials.Name,
-							Namespace: pkg.Credentials.Namespace,
-						},
-					},
-				},
-			},
-		},
-	}
+	expectedProviderConfig := mission.Convert2GCP(providerName, pkg)
 	if err := controllerutil.SetControllerReference(mission, expectedProviderConfig, r.Scheme); err != nil {
 		return err
 	}
@@ -132,25 +108,7 @@ func (r *MissionReconciler) GetProviderConfigGCP(ctx context.Context, mission *m
 func (r *MissionReconciler) GetProviderConfigAWS(ctx context.Context, mission *missionv1alpha1.Mission, pkg *missionv1alpha1.PackageConfig) error {
 	providerName := mission.Name + "-" + strings.ToLower(pkg.Provider)
 	providerConfig := &awsv1.ProviderConfig{}
-	expectedProviderConfig := &awsv1.ProviderConfig{
-		ObjectMeta: metav1.ObjectMeta{
-			Name: providerName,
-		},
-		Spec: awsv1.ProviderConfigSpec{
-			Credentials: awsv1.ProviderCredentials{
-				Source: xpv1.CredentialsSourceSecret,
-				CommonCredentialSelectors: xpv1.CommonCredentialSelectors{
-					SecretRef: &xpv1.SecretKeySelector{
-						Key: pkg.Credentials.Key,
-						SecretReference: xpv1.SecretReference{
-							Name:      pkg.Credentials.Name,
-							Namespace: pkg.Credentials.Namespace,
-						},
-					},
-				},
-			},
-		},
-	}
+	expectedProviderConfig := mission.Convert2AWS(providerName, pkg)
 	if err := controllerutil.SetControllerReference(mission, expectedProviderConfig, r.Scheme); err != nil {
 		return err
 	}
@@ -171,25 +129,7 @@ func (r *MissionReconciler) GetProviderConfigAWS(ctx context.Context, mission *m
 func (r *MissionReconciler) GetProviderConfigAzure(ctx context.Context, mission *missionv1alpha1.Mission, pkg *missionv1alpha1.PackageConfig) error {
 	providerName := mission.Name + "-" + strings.ToLower(pkg.Provider)
 	providerConfig := &azrv1.ProviderConfig{}
-	expectedProviderConfig := &azrv1.ProviderConfig{
-		ObjectMeta: metav1.ObjectMeta{
-			Name: providerName,
-		},
-		Spec: azrv1.ProviderConfigSpec{
-			Credentials: azrv1.ProviderCredentials{
-				Source: xpv1.CredentialsSourceSecret,
-				CommonCredentialSelectors: xpv1.CommonCredentialSelectors{
-					SecretRef: &xpv1.SecretKeySelector{
-						Key: pkg.Credentials.Key,
-						SecretReference: xpv1.SecretReference{
-							Name:      pkg.Credentials.Name,
-							Namespace: pkg.Credentials.Namespace,
-						},
-					},
-				},
-			},
-		},
-	}
+	expectedProviderConfig := mission.Convert2Azure(providerName, pkg)
 	if err := controllerutil.SetControllerReference(mission, expectedProviderConfig, r.Scheme); err != nil {
 		return err
 	}
