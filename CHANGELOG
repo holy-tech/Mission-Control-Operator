@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Enabled AWS family provider.
 - Enabled Azure family provider.
 - Testing Mission controller with Ginko (e2e)
+- Migrated resource specific transformations to CRD methods.
 
 ### Changed
 - Large code migration to provider families as core providers will be deprecated.
