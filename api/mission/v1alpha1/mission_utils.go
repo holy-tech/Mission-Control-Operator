@@ -16,9 +16,17 @@ limitations under the License.
 
 package v1alpha1
 
-func (m *Mission) GCPVerify() bool {
+import (
+	"errors"
+)
+
+func (m *Mission) GCPVerify(packageId int) error {
 	m.GenericVerify()
-	return true
+	pkg := m.Spec.Packages[packageId]
+	if pkg.ProjectID == "" {
+		return errors.New("Project Id not filled for GCP package.")
+	}
+	return nil
 }
 
 func (m *Mission) AWSVerify() bool {
