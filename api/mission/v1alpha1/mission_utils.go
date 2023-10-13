@@ -29,16 +29,14 @@ func (m *Mission) GCPVerify(packageId int) error {
 	return nil
 }
 
-func (m *Mission) AWSVerify() bool {
-	m.GenericVerify()
-	return true
+func (m *Mission) AWSVerify() error {
+	return m.GenericVerify()
 }
 
-func (m *Mission) AzureVerify() bool {
-	m.GenericVerify()
-	return true
+func (m *Mission) AzureVerify() error {
+	return m.GenericVerify()
 }
 
-func (m *Mission) GenericVerify() bool {
-	return true
+func (m *Mission) GenericVerify() error {
+	return nil
 }
