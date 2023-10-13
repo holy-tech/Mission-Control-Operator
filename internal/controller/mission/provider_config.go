@@ -20,33 +20,24 @@ import (
 	"context"
 	"errors"
 	"fmt"
+
 	"reflect"
 	"strings"
 
 	k8serrors "k8s.io/apimachinery/pkg/api/errors"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	runtime "k8s.io/apimachinery/pkg/runtime"
 	types "k8s.io/apimachinery/pkg/types"
 	controllerutil "sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 
-	xpv1 "github.com/crossplane/crossplane-runtime/apis/common/v1"
 	missionv1alpha1 "github.com/holy-tech/Mission-Control-Operator/api/mission/v1alpha1"
+	"github.com/holy-tech/Mission-Control-Operator/internal/controller/utils"
 	awsv1 "github.com/upbound/provider-aws/apis/v1beta1"
 	azrv1 "github.com/upbound/provider-azure/apis/v1beta1"
 	gcpv1 "github.com/upbound/provider-gcp/apis/v1beta1"
 )
 
-type ProviderConfigInterface interface {
-	metav1.Object
-	runtime.Object
-
-	GetSpec()
-	SetSpec()
-}
-
 func (r *MissionReconciler) ReconcileProviderConfigs(ctx context.Context, mission *missionv1alpha1.Mission) error {
-	for _, pkg := range mission.Spec.Packages {
-		err := r.ReconcileProviderConfigByProvider(ctx, mission, &pkg)
+	for i, pkg := range mission.Spec.Packages {
+		err := r.ReconcileProviderConfigByProvider(ctx, mission, i, &pkg)
 		if err != nil {
 			r.Recorder.Event(mission, "Warning", "ProviderConfig not created", "Could not correctly create ProviderConfig resource.")
 			return err
@@ -55,14 +46,26 @@ func (r *MissionReconciler) ReconcileProviderConfigs(ctx context.Context, missio
 	return nil
 }
 
-func (r *MissionReconciler) ReconcileProviderConfigByProvider(ctx context.Context, mission *missionv1alpha1.Mission, pkg *missionv1alpha1.PackageConfig) error {
+func (r *MissionReconciler) ReconcileProviderConfigByProvider(ctx context.Context, mission *missionv1alpha1.Mission, packageId int, pkg *missionv1alpha1.PackageConfig) error {
 	var err error
 	if pkg.Provider == "gcp" {
-		err = r.GetProviderConfigGCP(ctx, pkg, mission)
+		err = mission.GCPVerify(packageId)
+		if err != nil {
+			return err
+		}
+		err = r.GetProviderConfigGCP(ctx, mission, pkg)
 	} else if pkg.Provider == "aws" {
-		err = r.GetProviderConfigAWS(ctx, pkg, mission)
+		err = mission.AWSVerify()
+		if err != nil {
+			return err
+		}
+		err = r.GetProviderConfigAWS(ctx, mission, pkg)
 	} else if pkg.Provider == "azure" {
-		err = r.GetProviderConfigAzure(ctx, pkg, mission)
+		err = mission.AzureVerify()
+		if err != nil {
+			return err
+		}
+		err = r.GetProviderConfigAzure(ctx, mission, pkg)
 	} else {
 		message := fmt.Sprintf("Provider %s not known", pkg.Provider)
 		err = errors.New(message)
@@ -73,110 +76,32 @@ func (r *MissionReconciler) ReconcileProviderConfigByProvider(ctx context.Contex
 	return nil
 }
 
-func (r *MissionReconciler) GetProviderConfigGCP(ctx context.Context, pkg *missionv1alpha1.PackageConfig, mission *missionv1alpha1.Mission) error {
+func (r *MissionReconciler) GetProviderConfigGCP(ctx context.Context, mission *missionv1alpha1.Mission, pkg *missionv1alpha1.PackageConfig) error {
 	providerName := mission.Name + "-" + strings.ToLower(pkg.Provider)
 	providerConfig := &gcpv1.ProviderConfig{}
-	expectedProviderConfig := &gcpv1.ProviderConfig{
-		TypeMeta: metav1.TypeMeta{
-			Kind:       "ProviderConfig",
-			APIVersion: "gcp.upbound.io/v1beta1",
-		},
-		ObjectMeta: metav1.ObjectMeta{
-			Name: providerName,
-		},
-		Spec: gcpv1.ProviderConfigSpec{
-			ProjectID: pkg.ProjectID,
-			Credentials: gcpv1.ProviderCredentials{
-				Source: xpv1.CredentialsSourceSecret,
-				CommonCredentialSelectors: xpv1.CommonCredentialSelectors{
-					SecretRef: &xpv1.SecretKeySelector{
-						Key: pkg.Credentials.Key,
-						SecretReference: xpv1.SecretReference{
-							Name:      pkg.Credentials.Name,
-							Namespace: pkg.Credentials.Namespace,
-						},
-					},
-				},
-			},
-		},
-	}
-	if err := controllerutil.SetControllerReference(mission, expectedProviderConfig, r.Scheme); err != nil {
-		return err
-	}
-	if err := r.Get(ctx, types.NamespacedName{Name: expectedProviderConfig.GetName()}, providerConfig); err != nil {
-		if k8serrors.IsNotFound(err) {
-			return r.Create(ctx, expectedProviderConfig)
-		}
-	} else if !reflect.DeepEqual(providerConfig.Spec, expectedProviderConfig.Spec) {
-		expectedProviderConfig.SetUID(providerConfig.GetUID())
-		expectedProviderConfig.SetResourceVersion(providerConfig.GetResourceVersion())
-		providerConfig.Spec = expectedProviderConfig.Spec
-		err := r.Update(ctx, providerConfig)
-		return err
-	}
-	return nil
+	expectedProviderConfig := mission.Convert2GCP(providerName, pkg)
+	return r.ProviderConfigApply(ctx, mission, providerConfig, expectedProviderConfig)
 }
 
-func (r *MissionReconciler) GetProviderConfigAWS(ctx context.Context, pkg *missionv1alpha1.PackageConfig, mission *missionv1alpha1.Mission) error {
+func (r *MissionReconciler) GetProviderConfigAWS(ctx context.Context, mission *missionv1alpha1.Mission, pkg *missionv1alpha1.PackageConfig) error {
 	providerName := mission.Name + "-" + strings.ToLower(pkg.Provider)
 	providerConfig := &awsv1.ProviderConfig{}
-	expectedProviderConfig := &awsv1.ProviderConfig{
-		ObjectMeta: metav1.ObjectMeta{
-			Name: providerName,
-		},
-		Spec: awsv1.ProviderConfigSpec{
-			Credentials: awsv1.ProviderCredentials{
-				Source: xpv1.CredentialsSourceSecret,
-				CommonCredentialSelectors: xpv1.CommonCredentialSelectors{
-					SecretRef: &xpv1.SecretKeySelector{
-						Key: pkg.Credentials.Key,
-						SecretReference: xpv1.SecretReference{
-							Name:      pkg.Credentials.Name,
-							Namespace: pkg.Credentials.Namespace,
-						},
-					},
-				},
-			},
-		},
-	}
-	if err := controllerutil.SetControllerReference(mission, expectedProviderConfig, r.Scheme); err != nil {
-		return err
-	}
-	if err := r.Get(ctx, types.NamespacedName{Name: expectedProviderConfig.GetName()}, providerConfig); err != nil {
-		if k8serrors.IsNotFound(err) {
-			return r.Create(ctx, expectedProviderConfig)
-		}
-	} else if !reflect.DeepEqual(providerConfig.Spec, expectedProviderConfig.Spec) {
-		expectedProviderConfig.SetUID(providerConfig.GetUID())
-		expectedProviderConfig.SetResourceVersion(providerConfig.GetResourceVersion())
-		providerConfig.Spec = expectedProviderConfig.Spec
-		err := r.Update(ctx, providerConfig)
-		return err
-	}
-	return nil
+	expectedProviderConfig := mission.Convert2AWS(providerName, pkg)
+	return r.ProviderConfigApply(ctx, mission, providerConfig, expectedProviderConfig)
 }
 
-func (r *MissionReconciler) GetProviderConfigAzure(ctx context.Context, pkg *missionv1alpha1.PackageConfig, mission *missionv1alpha1.Mission) error {
+func (r *MissionReconciler) GetProviderConfigAzure(ctx context.Context, mission *missionv1alpha1.Mission, pkg *missionv1alpha1.PackageConfig) error {
 	providerName := mission.Name + "-" + strings.ToLower(pkg.Provider)
 	providerConfig := &azrv1.ProviderConfig{}
-	expectedProviderConfig := &azrv1.ProviderConfig{
-		ObjectMeta: metav1.ObjectMeta{
-			Name: providerName,
-		},
-		Spec: azrv1.ProviderConfigSpec{
-			Credentials: azrv1.ProviderCredentials{
-				Source: xpv1.CredentialsSourceSecret,
-				CommonCredentialSelectors: xpv1.CommonCredentialSelectors{
-					SecretRef: &xpv1.SecretKeySelector{
-						Key: pkg.Credentials.Key,
-						SecretReference: xpv1.SecretReference{
-							Name:      pkg.Credentials.Name,
-							Namespace: pkg.Credentials.Namespace,
-						},
-					},
-				},
-			},
-		},
+	expectedProviderConfig := mission.Convert2Azure(providerName, pkg)
+	return r.ProviderConfigApply(ctx, mission, providerConfig, expectedProviderConfig)
+}
+
+func (r *MissionReconciler) ProviderConfigApply(ctx context.Context, mission *missionv1alpha1.Mission, providerConfig, expectedProviderConfig utils.MissionObject) error {
+	pcSpec := utils.GetValueOf(providerConfig, "Spec")
+	epcSpec := utils.GetValueOf(expectedProviderConfig, "Spec")
+	if pcSpec.Equal(reflect.Value{}) || epcSpec.Equal(reflect.Value{}) {
+		return errors.New("Could not apply ProviderConfig")
 	}
 	if err := controllerutil.SetControllerReference(mission, expectedProviderConfig, r.Scheme); err != nil {
 		return err
@@ -185,10 +110,12 @@ func (r *MissionReconciler) GetProviderConfigAzure(ctx context.Context, pkg *mis
 		if k8serrors.IsNotFound(err) {
 			return r.Create(ctx, expectedProviderConfig)
 		}
-	} else if !reflect.DeepEqual(providerConfig.Spec, expectedProviderConfig.Spec) {
+	} else if !reflect.DeepEqual(pcSpec, epcSpec) {
 		expectedProviderConfig.SetUID(providerConfig.GetUID())
 		expectedProviderConfig.SetResourceVersion(providerConfig.GetResourceVersion())
-		providerConfig.Spec = expectedProviderConfig.Spec
+		if err := utils.SetValueOf(providerConfig, "Spec", epcSpec); err != nil {
+			return err
+		}
 		err := r.Update(ctx, providerConfig)
 		return err
 	}

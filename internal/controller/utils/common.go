@@ -17,6 +17,8 @@ limitations under the License.
 package utils
 
 import (
+	"errors"
+	"reflect"
 	"slices"
 	"sort"
 )
@@ -74,4 +76,24 @@ func RemoveString(slice []string, s string) (result []string) {
 		result = append(result, item)
 	}
 	return
+}
+
+// Object utilities
+
+func GetValueOf(obj any, field string) reflect.Value {
+	value := reflect.ValueOf(obj)
+	val := reflect.Indirect(value).FieldByName(field)
+	if val.IsValid() {
+		return val
+	}
+	return reflect.Value{}
+}
+
+func SetValueOf(obj any, field string, newValue any) error {
+	val := GetValueOf(obj, field)
+	if reflect.TypeOf(val) != reflect.TypeOf(newValue) || !val.CanSet() {
+		return errors.New("Issue setting new value")
+	}
+	val.Set(reflect.ValueOf(newValue))
+	return nil
 }
