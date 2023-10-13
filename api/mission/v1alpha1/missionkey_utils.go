@@ -16,21 +16,21 @@ limitations under the License.
 
 package v1alpha1
 
-func (m *MissionKey) GCPVerify() bool {
-	m.GenericVerify()
+func (k *MissionKey) GCPVerify() bool {
+	k.GenericVerify()
 	return true
 }
 
-func (m *MissionKey) AWSVerify() bool {
-	m.GenericVerify()
+func (k *MissionKey) AWSVerify() bool {
+	k.GenericVerify()
 	return true
 }
 
-func (m *MissionKey) AzureVerify() bool {
-	m.GenericVerify()
+func (k *MissionKey) AzureVerify() bool {
+	k.GenericVerify()
 	return true
 }
 
-func (m *MissionKey) GenericVerify() bool {
+func (k *MissionKey) GenericVerify() bool {
 	return true
 }
