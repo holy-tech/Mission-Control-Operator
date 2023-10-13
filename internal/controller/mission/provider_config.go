@@ -98,6 +98,11 @@ func (r *MissionReconciler) GetProviderConfigAzure(ctx context.Context, mission 
 }
 
 func (r *MissionReconciler) ProviderConfigApply(ctx context.Context, mission *missionv1alpha1.Mission, providerConfig, expectedProviderConfig utils.MissionObject) error {
+	pcSpec := utils.GetValueOf(providerConfig, "Spec")
+	epcSpec := utils.GetValueOf(expectedProviderConfig, "Spec")
+	if pcSpec.Equal(reflect.Value{}) || epcSpec.Equal(reflect.Value{}) {
+		return errors.New("Could not apply ProviderConfig")
+	}
 	if err := controllerutil.SetControllerReference(mission, expectedProviderConfig, r.Scheme); err != nil {
 		return err
 	}
@@ -105,13 +110,12 @@ func (r *MissionReconciler) ProviderConfigApply(ctx context.Context, mission *mi
 		if k8serrors.IsNotFound(err) {
 			return r.Create(ctx, expectedProviderConfig)
 		}
-	} else if !reflect.DeepEqual(
-		utils.GetValueOf(providerConfig, "Spec"),
-		utils.GetValueOf(expectedProviderConfig, "Spec"),
-	) {
+	} else if !reflect.DeepEqual(pcSpec, epcSpec) {
 		expectedProviderConfig.SetUID(providerConfig.GetUID())
 		expectedProviderConfig.SetResourceVersion(providerConfig.GetResourceVersion())
-		providerConfig.Spec = utils.GetValueOf(expectedProviderConfig, "Spec")
+		if err := utils.SetValueOf(providerConfig, "Spec", epcSpec); err != nil {
+			return err
+		}
 		err := r.Update(ctx, providerConfig)
 		return err
 	}
