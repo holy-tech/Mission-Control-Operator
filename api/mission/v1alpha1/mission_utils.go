@@ -18,7 +18,87 @@ package v1alpha1
 
 import (
 	"errors"
+
+	xpv1 "github.com/crossplane/crossplane-runtime/apis/common/v1"
+	awsv1 "github.com/upbound/provider-aws/apis/v1beta1"
+	azrv1 "github.com/upbound/provider-azure/apis/v1beta1"
+	gcpv1 "github.com/upbound/provider-gcp/apis/v1beta1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
+
+func (m *Mission) Convert2GCP(name string, pkg *PackageConfig) *gcpv1.ProviderConfig {
+	providerConfig := &gcpv1.ProviderConfig{
+		TypeMeta: metav1.TypeMeta{
+			Kind:       "ProviderConfig",
+			APIVersion: "gcp.upbound.io/v1beta1",
+		},
+		ObjectMeta: metav1.ObjectMeta{
+			Name: name,
+		},
+		Spec: gcpv1.ProviderConfigSpec{
+			ProjectID: pkg.ProjectID,
+			Credentials: gcpv1.ProviderCredentials{
+				Source: xpv1.CredentialsSourceSecret,
+				CommonCredentialSelectors: xpv1.CommonCredentialSelectors{
+					SecretRef: &xpv1.SecretKeySelector{
+						Key: pkg.Credentials.Key,
+						SecretReference: xpv1.SecretReference{
+							Name:      pkg.Credentials.Name,
+							Namespace: pkg.Credentials.Namespace,
+						},
+					},
+				},
+			},
+		},
+	}
+	return providerConfig
+}
+
+func (m *Mission) Convert2AWS(name string, pkg *PackageConfig) *awsv1.ProviderConfig {
+	providerConfig := &awsv1.ProviderConfig{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: name,
+		},
+		Spec: awsv1.ProviderConfigSpec{
+			Credentials: awsv1.ProviderCredentials{
+				Source: xpv1.CredentialsSourceSecret,
+				CommonCredentialSelectors: xpv1.CommonCredentialSelectors{
+					SecretRef: &xpv1.SecretKeySelector{
+						Key: pkg.Credentials.Key,
+						SecretReference: xpv1.SecretReference{
+							Name:      pkg.Credentials.Name,
+							Namespace: pkg.Credentials.Namespace,
+						},
+					},
+				},
+			},
+		},
+	}
+	return providerConfig
+}
+
+func (m *Mission) Convert2Azure(name string, pkg *PackageConfig) *azrv1.ProviderConfig {
+	providerConfig := &azrv1.ProviderConfig{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: name,
+		},
+		Spec: azrv1.ProviderConfigSpec{
+			Credentials: azrv1.ProviderCredentials{
+				Source: xpv1.CredentialsSourceSecret,
+				CommonCredentialSelectors: xpv1.CommonCredentialSelectors{
+					SecretRef: &xpv1.SecretKeySelector{
+						Key: pkg.Credentials.Key,
+						SecretReference: xpv1.SecretReference{
+							Name:      pkg.Credentials.Name,
+							Namespace: pkg.Credentials.Namespace,
+						},
+					},
+				},
+			},
+		},
+	}
+	return providerConfig
+}
 
 func (m *Mission) GCPVerify(packageId int) error {
 	m.GenericVerify()
