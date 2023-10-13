@@ -17,6 +17,7 @@ limitations under the License.
 package utils
 
 import (
+	"reflect"
 	"slices"
 	"sort"
 )
@@ -74,4 +75,15 @@ func RemoveString(slice []string, s string) (result []string) {
 		result = append(result, item)
 	}
 	return
+}
+
+// Object utilities
+
+func GetValueOf(obj any, field string) any {
+	value := reflect.ValueOf(obj)
+	val := reflect.Indirect(value).FieldByName(field)
+	if val.IsValid() {
+		return val
+	}
+	return nil
 }

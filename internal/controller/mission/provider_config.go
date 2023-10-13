@@ -21,7 +21,7 @@ import (
 	"errors"
 	"fmt"
 
-	// "reflect"
+	"reflect"
 	"strings"
 
 	k8serrors "k8s.io/apimachinery/pkg/api/errors"
@@ -105,12 +105,15 @@ func (r *MissionReconciler) ProviderConfigApply(ctx context.Context, mission *mi
 		if k8serrors.IsNotFound(err) {
 			return r.Create(ctx, expectedProviderConfig)
 		}
-		// } else if !reflect.DeepEqual(providerConfig.Spec, expectedProviderConfig.Spec) {
-		// 	expectedProviderConfig.SetUID(providerConfig.GetUID())
-		// 	expectedProviderConfig.SetResourceVersion(providerConfig.GetResourceVersion())
-		// 	providerConfig.Spec = expectedProviderConfig.Spec
-		// 	err := r.Update(ctx, providerConfig)
-		// 	return err
+	} else if !reflect.DeepEqual(
+		utils.GetValueOf(providerConfig, "Spec"),
+		utils.GetValueOf(expectedProviderConfig, "Spec"),
+	) {
+		expectedProviderConfig.SetUID(providerConfig.GetUID())
+		expectedProviderConfig.SetResourceVersion(providerConfig.GetResourceVersion())
+		providerConfig.Spec = utils.GetValueOf(expectedProviderConfig, "Spec")
+		err := r.Update(ctx, providerConfig)
+		return err
 	}
 	return nil
 }
