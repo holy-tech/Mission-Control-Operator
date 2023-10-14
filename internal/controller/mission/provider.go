@@ -28,12 +28,9 @@ import (
 )
 
 func ConfirmProvider(ctx context.Context, r *MissionReconciler, mission *missionv1alpha1.Mission) error {
+	// Check that all the providers being used in specified mission
+	// are installed in the cluster and are supported.
 	for _, p := range mission.Spec.Packages {
-		if !utils.Contains(utils.GetSupportedProviders(), p.Provider) {
-			message := fmt.Sprintf("Provider %s is not supported, please use one of %v", p.Provider, utils.GetSupportedProviders())
-			err := errors.New(message)
-			return err
-		}
 		provider, err := GetProviderInstalled(ctx, r, mission, p.Provider)
 		if err != nil {
 			return err
@@ -50,8 +47,8 @@ func ConfirmProvider(ctx context.Context, r *MissionReconciler, mission *mission
 func GetProviderInstalled(ctx context.Context, r *MissionReconciler, mission *missionv1alpha1.Mission, providerName string) (*cpv1.Provider, error) {
 	// Return provider after verifying that it is installed and supported by the software.
 	// Returns error if provider is not installed or if not supported.
-	if utils.Contains(utils.GetValues(ProviderMapping), providerName) {
-		k8providerName := ProviderMapping[providerName]
+	if utils.Contains(utils.GetSupportedProviders(), providerName) {
+		k8providerName := utils.ProviderMapping[providerName]
 		p, err := r.GetProvider(ctx, k8providerName)
 		if err != nil {
 			message := fmt.Sprintf("Could not find provider %s, ensure provider is installed", k8providerName)
@@ -59,6 +56,6 @@ func GetProviderInstalled(ctx context.Context, r *MissionReconciler, mission *mi
 		}
 		return p, nil
 	}
-	message := fmt.Sprintf("Provider not allowed please choose of the following (%v)", utils.GetValues(ProviderMapping))
+	message := fmt.Sprintf("Provider not allowed please choose of the following (%v)", utils.GetSupportedProviders())
 	return nil, errors.New(message)
 }
