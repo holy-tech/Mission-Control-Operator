@@ -52,13 +52,11 @@ func (r *MissionReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ct
 	if err := r.Get(ctx, req.NamespacedName, mission); err != nil {
 		return ctrl.Result{}, err
 	}
-	// Confirm that crossplane is installed in the kubernetes cluster
 	if err := utils.ConfirmCRD(ctx, "providers.pkg.crossplane.io"); err != nil {
 		r.Recorder.Event(mission, "Warning", "Failed", "Crossplane installation not found")
 		return ctrl.Result{}, errors.New("could not find crossplane CRD \"Provider\"")
 	}
-
-	if err := ConfirmProvider(ctx, r, mission); err != nil {
+	if err := UpdateProvider(ctx, r, mission); err != nil {
 		r.Recorder.Event(mission, "Warning", "Failed", err.Error())
 		return ctrl.Result{}, err
 	}

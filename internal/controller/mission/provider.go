@@ -27,9 +27,10 @@ import (
 	utils "github.com/holy-tech/Mission-Control-Operator/internal/controller/utils"
 )
 
-func ConfirmProvider(ctx context.Context, r *MissionReconciler, mission *missionv1alpha1.Mission) error {
+func UpdateProvider(ctx context.Context, r *MissionReconciler, mission *missionv1alpha1.Mission) error {
 	// Check that all the providers being used in specified mission
 	// are installed in the cluster and are supported.
+	// If they are, update package status for said provider.
 	for _, p := range mission.Spec.Packages {
 		provider, err := GetProviderInstalled(ctx, r, mission, p.Provider)
 		if err != nil {

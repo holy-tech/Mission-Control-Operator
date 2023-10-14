@@ -26,6 +26,7 @@ import (
 )
 
 func ConfirmCRD(ctx context.Context, crdNameVersion string) error {
+	// Confirm that specified CRD is installed in the kubernetes cluster
 	clientConfig, _ := clientcmd.BuildConfigFromFlags("", os.Getenv("HOME")+"/.kube/config")
 	clientset, _ := apiextensionsclientset.NewForConfig(clientConfig)
 	_, err := clientset.ApiextensionsV1().CustomResourceDefinitions().Get(ctx, crdNameVersion, v1.GetOptions{})
