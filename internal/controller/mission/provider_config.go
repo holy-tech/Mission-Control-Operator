@@ -96,7 +96,7 @@ func ApplyProviderConfigAzure(ctx context.Context, r *MissionReconciler, mission
 	return r.ApplyGenericProviderConfig(ctx, mission, providerConfig, expectedProviderConfig)
 }
 
-func ConfirmProviderConfigs(ctx context.Context, r *MissionReconciler, mission *missionv1alpha1.Mission) error {
+func ConfirmProviderConfigs(ctx context.Context, mission *missionv1alpha1.Mission) error {
 	// Check that all the providers being used in specified mission
 	// are installed in the cluster and are supported.
 	// If they are, update package status for said provider.

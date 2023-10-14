@@ -61,7 +61,7 @@ func (r *MissionReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ct
 		return ctrl.Result{}, errors.New("could not find crossplane CRD \"Provider\"")
 	}
 	// Update mission providers installed status
-	if err := ConfirmProviderConfigs(ctx, r, mission); err != nil {
+	if err := ConfirmProviderConfigs(ctx, mission); err != nil {
 		r.Recorder.Event(mission, "Warning", "Failed", err.Error())
 		return ctrl.Result{}, err
 	}
