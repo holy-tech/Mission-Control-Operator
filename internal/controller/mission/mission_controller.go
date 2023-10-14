@@ -21,7 +21,6 @@ import (
 	"errors"
 	"os"
 
-	apiextensionsv1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
 	apiextensionsclientset "k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	runtime "k8s.io/apimachinery/pkg/runtime"
@@ -60,7 +59,7 @@ func (r *MissionReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ct
 		return ctrl.Result{}, err
 	}
 	// Confirm that crossplane is installed in the kubernetes cluster
-	if _, err := r.ConfirmCRD(ctx, "providers.pkg.crossplane.io"); err != nil {
+	if err := ConfirmCRD(ctx, "providers.pkg.crossplane.io"); err != nil {
 		r.Recorder.Event(mission, "Warning", "Failed", "Crossplane installation not found")
 		return ctrl.Result{}, errors.New("could not find crossplane CRD \"Provider\"")
 	}
@@ -81,11 +80,11 @@ func (r *MissionReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ct
 	return ctrl.Result{}, nil
 }
 
-func (r *MissionReconciler) ConfirmCRD(ctx context.Context, crdNameVersion string) (*apiextensionsv1.CustomResourceDefinition, error) {
+func ConfirmCRD(ctx context.Context, crdNameVersion string) error {
 	clientConfig, _ := clientcmd.BuildConfigFromFlags("", os.Getenv("HOME")+"/.kube/config")
 	clientset, _ := apiextensionsclientset.NewForConfig(clientConfig)
-	crd, err := clientset.ApiextensionsV1().CustomResourceDefinitions().Get(ctx, crdNameVersion, v1.GetOptions{})
-	return crd, err
+	_, err := clientset.ApiextensionsV1().CustomResourceDefinitions().Get(ctx, crdNameVersion, v1.GetOptions{})
+	return err
 }
 
 func (r *MissionReconciler) ReconcilePackageStatus(ctx context.Context, mission *missionv1alpha1.Mission, provider *cpv1.Provider) error {
