@@ -30,6 +30,7 @@ import (
 	ctrl "sigs.k8s.io/controller-runtime"
 	client "sigs.k8s.io/controller-runtime/pkg/client"
 
+	cpv1 "github.com/crossplane/crossplane/apis/pkg/v1"
 	gcpv1 "github.com/upbound/provider-gcp/apis/v1beta1"
 
 	missionv1alpha1 "github.com/holy-tech/Mission-Control-Operator/api/mission/v1alpha1"
@@ -84,6 +85,19 @@ func ConfirmCRD(ctx context.Context, crdNameVersion string) error {
 	clientset, _ := apiextensionsclientset.NewForConfig(clientConfig)
 	_, err := clientset.ApiextensionsV1().CustomResourceDefinitions().Get(ctx, crdNameVersion, v1.GetOptions{})
 	return err
+}
+
+func UpdatePackageStatus(mission *missionv1alpha1.Mission, provider *cpv1.Provider) {
+	if mission.Status.PackageStatus == nil {
+		mission.Status.PackageStatus = map[string]missionv1alpha1.MissionPackageStatus{}
+	}
+	ps := mission.Status.PackageStatus[provider.Name]
+	for _, c := range provider.Status.Conditions {
+		if c.Type == "Installed" {
+			ps.Installed = string(c.Status)
+		}
+	}
+	mission.Status.PackageStatus[provider.Name] = ps
 }
 
 func (r *MissionReconciler) SetupWithManager(mgr ctrl.Manager) error {
