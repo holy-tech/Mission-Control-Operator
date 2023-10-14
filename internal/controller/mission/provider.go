@@ -21,10 +21,6 @@ import (
 	"errors"
 	"fmt"
 
-	types "k8s.io/apimachinery/pkg/types"
-
-	cpv1 "github.com/crossplane/crossplane/apis/pkg/v1"
-
 	missionv1alpha1 "github.com/holy-tech/Mission-Control-Operator/api/mission/v1alpha1"
 	utils "github.com/holy-tech/Mission-Control-Operator/internal/controller/utils"
 )
@@ -62,10 +58,4 @@ func (r *MissionReconciler) ConfirmProviderInstalled(ctx context.Context, missio
 		return errors.New(message)
 	}
 	return nil
-}
-
-func (r *MissionReconciler) GetProvider(ctx context.Context, providerName string) (*cpv1.Provider, error) {
-	p := &cpv1.Provider{}
-	err := r.Get(ctx, types.NamespacedName{Name: providerName}, p)
-	return p, err
 }

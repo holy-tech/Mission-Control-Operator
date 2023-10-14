@@ -24,6 +24,7 @@ import (
 	apiextensionsclientset "k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	runtime "k8s.io/apimachinery/pkg/runtime"
+	types "k8s.io/apimachinery/pkg/types"
 	clientcmd "k8s.io/client-go/tools/clientcmd"
 	record "k8s.io/client-go/tools/record"
 
@@ -79,6 +80,12 @@ func (r *MissionReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ct
 		return ctrl.Result{}, err
 	}
 	return ctrl.Result{}, nil
+}
+
+func (r *MissionReconciler) GetProvider(ctx context.Context, providerName string) (*cpv1.Provider, error) {
+	p := &cpv1.Provider{}
+	err := r.Get(ctx, types.NamespacedName{Name: providerName}, p)
+	return p, err
 }
 
 func ConfirmCRD(ctx context.Context, crdNameVersion string) error {
