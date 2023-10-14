@@ -101,3 +101,77 @@ var _ = Describe("Azure Mission controller", func() {
 		})
 	})
 })
+
+var _ = Describe("Apply multiple different provider keys", func() {
+	Context("Creating multi-provider Mission", func() {
+		It("Should apply multi-provider mission definition", func() {
+			By("Creating new multi-provider mission")
+			ctx := context.Background()
+			mission := &missionv1alpha1.Mission{
+				ObjectMeta: metav1.ObjectMeta{
+					Name: "mission-sample-hybrid",
+				},
+				Spec: missionv1alpha1.MissionSpec{
+					Packages: []missionv1alpha1.PackageConfig{{
+						Provider:  "gcp",
+						ProjectID: "made-up-project-id",
+						Credentials: missionv1alpha1.CredentialConfig{
+							Name:      "missionkey-sample-gcp",
+							Namespace: "default",
+							Key:       "creds",
+						},
+					}, {
+						Provider: "aws",
+						Credentials: missionv1alpha1.CredentialConfig{
+							Name:      "missionkey-sample-aws",
+							Namespace: "default",
+							Key:       "creds",
+						},
+					}, {
+						Provider: "azure",
+						Credentials: missionv1alpha1.CredentialConfig{
+							Name:      "missionkey-sample-azure",
+							Namespace: "default",
+							Key:       "creds",
+						},
+					}},
+				},
+			}
+			Expect(k8sClient.Create(ctx, mission)).Should(Succeed())
+		})
+	})
+})
+
+var _ = Describe("Apply multiple of the same provider keys", func() {
+	Context("Creating Mission", func() {
+		It("Should apply mission with multiple keys of one provider definition", func() {
+			By("Creating new multiple key mission")
+			ctx := context.Background()
+			mission := &missionv1alpha1.Mission{
+				ObjectMeta: metav1.ObjectMeta{
+					Name: "mission-sample-duplicate",
+				},
+				Spec: missionv1alpha1.MissionSpec{
+					Packages: []missionv1alpha1.PackageConfig{{
+						Provider:  "gcp",
+						ProjectID: "made-up-project-id",
+						Credentials: missionv1alpha1.CredentialConfig{
+							Name:      "missionkey-sample-gcp",
+							Namespace: "default",
+							Key:       "creds",
+						},
+					}, {
+						Provider:  "gcp",
+						ProjectID: "made-up-project-id2",
+						Credentials: missionv1alpha1.CredentialConfig{
+							Name:      "missionkey-sample-gcp2",
+							Namespace: "default",
+							Key:       "creds",
+						},
+					}},
+				},
+			}
+			Expect(k8sClient.Create(ctx, mission)).Should(Succeed())
+		})
+	})
+})
