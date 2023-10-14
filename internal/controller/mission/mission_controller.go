@@ -62,12 +62,12 @@ func (r *MissionReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ct
 	}
 	r.Recorder.Event(mission, "Normal", "Success", "Mission correctly connected to Crossplane")
 	// Create ProviderConfig that resources will reference.
-	if err := r.ReconcileProviderConfigs(ctx, mission); err != nil {
+	if err := ReconcileProviderConfigs(ctx, r, mission); err != nil {
 		return ctrl.Result{}, err
 	}
 	r.Recorder.Event(mission, "Normal", "Success", "ProviderConfig correctly created")
 	// Confirm that mission key exists, if not create warning.
-	if err := r.ConfirmMissionKeys(ctx, mission); err != nil {
+	if err := ConfirmMissionKeys(ctx, r, mission); err != nil {
 		return ctrl.Result{}, err
 	}
 	r.Recorder.Event(mission, "Normal", "Success", "Mission keys correctly synced")

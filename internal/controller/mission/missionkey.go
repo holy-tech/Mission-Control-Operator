@@ -25,7 +25,7 @@ import (
 	types "k8s.io/apimachinery/pkg/types"
 )
 
-func (r *MissionReconciler) ConfirmMissionKeys(ctx context.Context, mission *missionv1alpha1.Mission) error {
+func ConfirmMissionKeys(ctx context.Context, r *MissionReconciler, mission *missionv1alpha1.Mission) error {
 	for _, pkg := range mission.Spec.Packages {
 		key := &missionv1alpha1.MissionKey{}
 		err := r.Get(ctx, types.NamespacedName{Name: pkg.Credentials.Name, Namespace: pkg.Credentials.Namespace}, key)
