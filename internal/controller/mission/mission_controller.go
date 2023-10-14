@@ -19,13 +19,9 @@ package missioncontroller
 import (
 	"context"
 	"errors"
-	"os"
 
-	apiextensionsclientset "k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset"
-	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	runtime "k8s.io/apimachinery/pkg/runtime"
 	types "k8s.io/apimachinery/pkg/types"
-	clientcmd "k8s.io/client-go/tools/clientcmd"
 	record "k8s.io/client-go/tools/record"
 
 	ctrl "sigs.k8s.io/controller-runtime"
@@ -35,6 +31,7 @@ import (
 	gcpv1 "github.com/upbound/provider-gcp/apis/v1beta1"
 
 	missionv1alpha1 "github.com/holy-tech/Mission-Control-Operator/api/mission/v1alpha1"
+	utils "github.com/holy-tech/Mission-Control-Operator/internal/controller/utils"
 )
 
 type MissionReconciler struct {
@@ -60,7 +57,7 @@ func (r *MissionReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ct
 		return ctrl.Result{}, err
 	}
 	// Confirm that crossplane is installed in the kubernetes cluster
-	if err := ConfirmCRD(ctx, "providers.pkg.crossplane.io"); err != nil {
+	if err := utils.ConfirmCRD(ctx, "providers.pkg.crossplane.io"); err != nil {
 		r.Recorder.Event(mission, "Warning", "Failed", "Crossplane installation not found")
 		return ctrl.Result{}, errors.New("could not find crossplane CRD \"Provider\"")
 	}
@@ -86,13 +83,6 @@ func (r *MissionReconciler) GetProvider(ctx context.Context, providerName string
 	p := &cpv1.Provider{}
 	err := r.Get(ctx, types.NamespacedName{Name: providerName}, p)
 	return p, err
-}
-
-func ConfirmCRD(ctx context.Context, crdNameVersion string) error {
-	clientConfig, _ := clientcmd.BuildConfigFromFlags("", os.Getenv("HOME")+"/.kube/config")
-	clientset, _ := apiextensionsclientset.NewForConfig(clientConfig)
-	_, err := clientset.ApiextensionsV1().CustomResourceDefinitions().Get(ctx, crdNameVersion, v1.GetOptions{})
-	return err
 }
 
 func UpdatePackageStatus(mission *missionv1alpha1.Mission, provider *cpv1.Provider) {
