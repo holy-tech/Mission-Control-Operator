@@ -21,6 +21,8 @@ import (
 	"errors"
 	"fmt"
 
+	cpv1 "github.com/crossplane/crossplane/apis/pkg/v1"
+
 	missionv1alpha1 "github.com/holy-tech/Mission-Control-Operator/api/mission/v1alpha1"
 	utils "github.com/holy-tech/Mission-Control-Operator/internal/controller/utils"
 )
@@ -32,7 +34,12 @@ func ConfirmProvider(ctx context.Context, r *MissionReconciler, mission *mission
 			err := errors.New(message)
 			return err
 		}
-		err := ConfirmProviderInstalled(ctx, r, mission, p.Provider)
+		provider, err := ConfirmProviderInstalled(ctx, r, mission, p.Provider)
+		if err != nil {
+			return err
+		}
+		UpdatePackageStatus(mission, provider)
+		err = r.Status().Update(ctx, mission)
 		if err != nil {
 			return err
 		}
@@ -40,22 +47,16 @@ func ConfirmProvider(ctx context.Context, r *MissionReconciler, mission *mission
 	return nil
 }
 
-func ConfirmProviderInstalled(ctx context.Context, r *MissionReconciler, mission *missionv1alpha1.Mission, providerName string) error {
+func ConfirmProviderInstalled(ctx context.Context, r *MissionReconciler, mission *missionv1alpha1.Mission, providerName string) (*cpv1.Provider, error) {
 	if utils.Contains(utils.GetValues(ProviderMapping), providerName) {
 		k8providerName := ProviderMapping[providerName]
 		p, err := r.GetProvider(ctx, k8providerName)
 		if err != nil {
 			message := fmt.Sprintf("Could not find provider %s, ensure provider is installed", k8providerName)
-			return errors.New(message)
+			return nil, errors.New(message)
 		}
-		UpdatePackageStatus(mission, p)
-		err = r.Status().Update(ctx, mission)
-		if err != nil {
-			return err
-		}
-	} else {
-		message := fmt.Sprintf("Provider not allowed please choose of the following (%v)", utils.GetValues(ProviderMapping))
-		return errors.New(message)
+		return p, nil
 	}
-	return nil
+	message := fmt.Sprintf("Provider not allowed please choose of the following (%v)", utils.GetValues(ProviderMapping))
+	return nil, errors.New(message)
 }
