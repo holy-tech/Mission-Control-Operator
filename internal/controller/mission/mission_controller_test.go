@@ -175,3 +175,29 @@ var _ = Describe("Apply multiple of the same provider keys", func() {
 		})
 	})
 })
+
+var _ = Describe("Recreate mission with same name", func() {
+	Context("Creating repeat Mission", func() {
+		It("Should crash due to mission already existing", func() {
+			By("Creating same mission")
+			ctx := context.Background()
+			mission := &missionv1alpha1.Mission{
+				ObjectMeta: metav1.ObjectMeta{
+					Name: "mission-sample-gcp",
+				},
+				Spec: missionv1alpha1.MissionSpec{
+					Packages: []missionv1alpha1.PackageConfig{{
+						Provider:  "gcp",
+						ProjectID: "made-up-project-id",
+						Credentials: missionv1alpha1.CredentialConfig{
+							Name:      "missionkey-sample-gcp",
+							Namespace: "default",
+							Key:       "creds",
+						},
+					}},
+				},
+			}
+			Expect(k8sClient.Create(ctx, mission)).ShouldNot(Succeed())
+		})
+	})
+})
