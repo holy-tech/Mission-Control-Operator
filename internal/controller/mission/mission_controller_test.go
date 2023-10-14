@@ -26,8 +26,8 @@ import (
 	missionv1alpha1 "github.com/holy-tech/Mission-Control-Operator/api/mission/v1alpha1"
 )
 
-var _ = Describe("GCP Mission controller", func() {
-	Context("Creating GCP Mission", func() {
+var _ = Describe("Mission Creation controller", func() {
+	Context("Creating Missions in different scenarios", func() {
 		It("Should apply gcp mission definition", func() {
 			By("Creating new gcp mission")
 			ctx := context.Background()
@@ -49,11 +49,6 @@ var _ = Describe("GCP Mission controller", func() {
 			}
 			Expect(k8sClient.Create(ctx, mission)).Should(Succeed())
 		})
-	})
-})
-
-var _ = Describe("AWS Mission controller", func() {
-	Context("Creating AWS Mission", func() {
 		It("Should apply aws mission definition", func() {
 			By("Creating new aws mission")
 			ctx := context.Background()
@@ -74,11 +69,6 @@ var _ = Describe("AWS Mission controller", func() {
 			}
 			Expect(k8sClient.Create(ctx, mission)).Should(Succeed())
 		})
-	})
-})
-
-var _ = Describe("Azure Mission controller", func() {
-	Context("Creating Azure Mission", func() {
 		It("Should apply azure mission definition", func() {
 			By("Creating new azure mission")
 			ctx := context.Background()
@@ -99,11 +89,6 @@ var _ = Describe("Azure Mission controller", func() {
 			}
 			Expect(k8sClient.Create(ctx, mission)).Should(Succeed())
 		})
-	})
-})
-
-var _ = Describe("Apply multiple different provider keys", func() {
-	Context("Creating multi-provider Mission", func() {
 		It("Should apply multi-provider mission definition", func() {
 			By("Creating new multi-provider mission")
 			ctx := context.Background()
@@ -139,11 +124,6 @@ var _ = Describe("Apply multiple different provider keys", func() {
 			}
 			Expect(k8sClient.Create(ctx, mission)).Should(Succeed())
 		})
-	})
-})
-
-var _ = Describe("Apply multiple of the same provider keys", func() {
-	Context("Creating Mission", func() {
 		It("Should apply mission with multiple keys of one provider definition", func() {
 			By("Creating new multiple key mission")
 			ctx := context.Background()
@@ -173,11 +153,6 @@ var _ = Describe("Apply multiple of the same provider keys", func() {
 			}
 			Expect(k8sClient.Create(ctx, mission)).Should(Succeed())
 		})
-	})
-})
-
-var _ = Describe("Recreate mission with same name", func() {
-	Context("Creating repeat Mission", func() {
 		It("Should crash due to mission already existing", func() {
 			By("Creating same mission")
 			ctx := context.Background()
