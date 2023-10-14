@@ -19,13 +19,16 @@ package missioncontroller
 import (
 	"context"
 	"errors"
+	"reflect"
 
+	k8serrors "k8s.io/apimachinery/pkg/api/errors"
 	runtime "k8s.io/apimachinery/pkg/runtime"
 	types "k8s.io/apimachinery/pkg/types"
 	record "k8s.io/client-go/tools/record"
 
 	ctrl "sigs.k8s.io/controller-runtime"
 	client "sigs.k8s.io/controller-runtime/pkg/client"
+	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 
 	cpv1 "github.com/crossplane/crossplane/apis/pkg/v1"
 	awsv1 "github.com/upbound/provider-aws/apis/v1beta1"
@@ -78,6 +81,31 @@ func (r *MissionReconciler) GetProvider(ctx context.Context, providerName string
 	p := &cpv1.Provider{}
 	err := r.Get(ctx, types.NamespacedName{Name: providerName}, p)
 	return p, err
+}
+
+func (r *MissionReconciler) ApplyGenericProviderConfig(ctx context.Context, mission *missionv1alpha1.Mission, providerConfig, expectedProviderConfig utils.MissionObject) error {
+	pcSpec := utils.GetValueOf(providerConfig, "Spec")
+	epcSpec := utils.GetValueOf(expectedProviderConfig, "Spec")
+	if pcSpec.Equal(reflect.Value{}) || epcSpec.Equal(reflect.Value{}) {
+		return errors.New("Could not apply ProviderConfig")
+	}
+	if err := controllerutil.SetControllerReference(mission, expectedProviderConfig, r.Scheme); err != nil {
+		return err
+	}
+	if err := r.Get(ctx, types.NamespacedName{Name: expectedProviderConfig.GetName()}, providerConfig); err != nil {
+		if k8serrors.IsNotFound(err) {
+			return r.Create(ctx, expectedProviderConfig)
+		}
+	} else if !reflect.DeepEqual(pcSpec, epcSpec) {
+		expectedProviderConfig.SetUID(providerConfig.GetUID())
+		expectedProviderConfig.SetResourceVersion(providerConfig.GetResourceVersion())
+		if err := utils.SetValueOf(providerConfig, "Spec", epcSpec); err != nil {
+			return err
+		}
+		err := r.Update(ctx, providerConfig)
+		return err
+	}
+	return nil
 }
 
 func (r *MissionReconciler) SetupWithManager(mgr ctrl.Manager) error {
