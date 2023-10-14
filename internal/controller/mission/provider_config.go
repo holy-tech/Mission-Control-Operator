@@ -36,10 +36,11 @@ import (
 )
 
 func (r *MissionReconciler) ReconcileProviderConfigs(ctx context.Context, mission *missionv1alpha1.Mission) error {
-	for i, _ := range mission.Spec.Packages {
+	for i, pkg := range mission.Spec.Packages {
 		err := r.ReconcileProviderConfigByProvider(ctx, mission, i)
 		if err != nil {
-			r.Recorder.Event(mission, "Warning", "ProviderConfig not created", "Could not correctly create ProviderConfig resource.")
+			message := fmt.Sprintf("Could not correctly create ProviderConfig resource %s.", pkg.Provider)
+			r.Recorder.Event(mission, "Warning", "ProviderConfig not created", message)
 			return err
 		}
 	}
