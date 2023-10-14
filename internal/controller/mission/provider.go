@@ -34,7 +34,7 @@ func ConfirmProvider(ctx context.Context, r *MissionReconciler, mission *mission
 			err := errors.New(message)
 			return err
 		}
-		provider, err := ConfirmProviderInstalled(ctx, r, mission, p.Provider)
+		provider, err := GetProviderInstalled(ctx, r, mission, p.Provider)
 		if err != nil {
 			return err
 		}
@@ -47,7 +47,9 @@ func ConfirmProvider(ctx context.Context, r *MissionReconciler, mission *mission
 	return nil
 }
 
-func ConfirmProviderInstalled(ctx context.Context, r *MissionReconciler, mission *missionv1alpha1.Mission, providerName string) (*cpv1.Provider, error) {
+func GetProviderInstalled(ctx context.Context, r *MissionReconciler, mission *missionv1alpha1.Mission, providerName string) (*cpv1.Provider, error) {
+	// Return provider after verifying that it is installed and supported by the software.
+	// Returns error if provider is not installed or if not supported.
 	if utils.Contains(utils.GetValues(ProviderMapping), providerName) {
 		k8providerName := ProviderMapping[providerName]
 		p, err := r.GetProvider(ctx, k8providerName)
