@@ -27,7 +27,7 @@ import (
 	utils "github.com/holy-tech/Mission-Control-Operator/internal/controller/utils"
 )
 
-func UpdateProvider(ctx context.Context, r *MissionReconciler, mission *missionv1alpha1.Mission) error {
+func UpdatePackages(ctx context.Context, r *MissionReconciler, mission *missionv1alpha1.Mission) error {
 	// Check that all the providers being used in specified mission
 	// are installed in the cluster and are supported.
 	// If they are, update package status for said provider.
@@ -59,4 +59,17 @@ func GetProviderInstalled(ctx context.Context, r *MissionReconciler, mission *mi
 	}
 	message := fmt.Sprintf("Provider not allowed please choose of the following (%v)", utils.GetSupportedProviders())
 	return nil, errors.New(message)
+}
+
+func UpdatePackageStatus(mission *missionv1alpha1.Mission, provider *cpv1.Provider) {
+	if mission.Status.PackageStatus == nil {
+		mission.Status.PackageStatus = map[string]missionv1alpha1.MissionPackageStatus{}
+	}
+	ps := mission.Status.PackageStatus[provider.Name]
+	for _, c := range provider.Status.Conditions {
+		if c.Type == "Installed" {
+			ps.Installed = string(c.Status)
+		}
+	}
+	mission.Status.PackageStatus[provider.Name] = ps
 }
