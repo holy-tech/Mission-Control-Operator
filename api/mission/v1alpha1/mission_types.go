@@ -41,7 +41,6 @@ type MissionSpec struct {
 }
 
 type MissionStatus struct {
-	PackageStatus map[string]MissionPackageStatus `json:"package_status,omitempty"`
 }
 
 //+kubebuilder:object:root=true

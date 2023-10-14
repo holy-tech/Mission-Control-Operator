@@ -20,10 +20,10 @@ import (
 	"context"
 	"errors"
 	"fmt"
-
 	"strings"
 
 	missionv1alpha1 "github.com/holy-tech/Mission-Control-Operator/api/mission/v1alpha1"
+	utils "github.com/holy-tech/Mission-Control-Operator/internal/controller/utils"
 	awsv1 "github.com/upbound/provider-aws/apis/v1beta1"
 	azrv1 "github.com/upbound/provider-azure/apis/v1beta1"
 	gcpv1 "github.com/upbound/provider-gcp/apis/v1beta1"
@@ -94,4 +94,17 @@ func ApplyProviderConfigAzure(ctx context.Context, r *MissionReconciler, mission
 	providerConfig := &azrv1.ProviderConfig{}
 	expectedProviderConfig := mission.Convert2Azure(providerName, pkg)
 	return r.ApplyGenericProviderConfig(ctx, mission, providerConfig, expectedProviderConfig)
+}
+
+func ConfirmProviderConfigs(ctx context.Context, r *MissionReconciler, mission *missionv1alpha1.Mission) error {
+	// Check that all the providers being used in specified mission
+	// are installed in the cluster and are supported.
+	// If they are, update package status for said provider.
+	for _, p := range mission.Spec.Packages {
+		providerCRD := fmt.Sprintf("providerconfigs.%s.upbound.io", p.Provider)
+		if err := utils.ConfirmCRD(ctx, providerCRD); err != nil {
+			return err
+		}
+	}
+	return nil
 }
