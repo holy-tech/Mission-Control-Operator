@@ -53,19 +53,19 @@ func (r *MissionReconciler) ReconcileProviderConfigByProvider(ctx context.Contex
 		if err != nil {
 			return err
 		}
-		err = r.GetProviderConfigGCP(ctx, mission, pkg)
+		err = r.ApplyProviderConfigGCP(ctx, mission, pkg)
 	} else if pkg.Provider == "aws" {
 		err = mission.AWSVerify()
 		if err != nil {
 			return err
 		}
-		err = r.GetProviderConfigAWS(ctx, mission, pkg)
+		err = r.ApplyProviderConfigAWS(ctx, mission, pkg)
 	} else if pkg.Provider == "azure" {
 		err = mission.AzureVerify()
 		if err != nil {
 			return err
 		}
-		err = r.GetProviderConfigAzure(ctx, mission, pkg)
+		err = r.ApplyProviderConfigAzure(ctx, mission, pkg)
 	} else {
 		message := fmt.Sprintf("Provider %s not known", pkg.Provider)
 		err = errors.New(message)
@@ -76,28 +76,28 @@ func (r *MissionReconciler) ReconcileProviderConfigByProvider(ctx context.Contex
 	return nil
 }
 
-func (r *MissionReconciler) GetProviderConfigGCP(ctx context.Context, mission *missionv1alpha1.Mission, pkg *missionv1alpha1.PackageConfig) error {
+func (r *MissionReconciler) ApplyProviderConfigGCP(ctx context.Context, mission *missionv1alpha1.Mission, pkg *missionv1alpha1.PackageConfig) error {
 	providerName := mission.Name + "-" + strings.ToLower(pkg.Provider)
 	providerConfig := &gcpv1.ProviderConfig{}
 	expectedProviderConfig := mission.Convert2GCP(providerName, pkg)
-	return r.ProviderConfigApply(ctx, mission, providerConfig, expectedProviderConfig)
+	return r.ApplyProviderConfig(ctx, mission, providerConfig, expectedProviderConfig)
 }
 
-func (r *MissionReconciler) GetProviderConfigAWS(ctx context.Context, mission *missionv1alpha1.Mission, pkg *missionv1alpha1.PackageConfig) error {
+func (r *MissionReconciler) ApplyProviderConfigAWS(ctx context.Context, mission *missionv1alpha1.Mission, pkg *missionv1alpha1.PackageConfig) error {
 	providerName := mission.Name + "-" + strings.ToLower(pkg.Provider)
 	providerConfig := &awsv1.ProviderConfig{}
 	expectedProviderConfig := mission.Convert2AWS(providerName, pkg)
-	return r.ProviderConfigApply(ctx, mission, providerConfig, expectedProviderConfig)
+	return r.ApplyProviderConfig(ctx, mission, providerConfig, expectedProviderConfig)
 }
 
-func (r *MissionReconciler) GetProviderConfigAzure(ctx context.Context, mission *missionv1alpha1.Mission, pkg *missionv1alpha1.PackageConfig) error {
+func (r *MissionReconciler) ApplyProviderConfigAzure(ctx context.Context, mission *missionv1alpha1.Mission, pkg *missionv1alpha1.PackageConfig) error {
 	providerName := mission.Name + "-" + strings.ToLower(pkg.Provider)
 	providerConfig := &azrv1.ProviderConfig{}
 	expectedProviderConfig := mission.Convert2Azure(providerName, pkg)
-	return r.ProviderConfigApply(ctx, mission, providerConfig, expectedProviderConfig)
+	return r.ApplyProviderConfig(ctx, mission, providerConfig, expectedProviderConfig)
 }
 
-func (r *MissionReconciler) ProviderConfigApply(ctx context.Context, mission *missionv1alpha1.Mission, providerConfig, expectedProviderConfig utils.MissionObject) error {
+func (r *MissionReconciler) ApplyProviderConfig(ctx context.Context, mission *missionv1alpha1.Mission, providerConfig, expectedProviderConfig utils.MissionObject) error {
 	pcSpec := utils.GetValueOf(providerConfig, "Spec")
 	epcSpec := utils.GetValueOf(expectedProviderConfig, "Spec")
 	if pcSpec.Equal(reflect.Value{}) || epcSpec.Equal(reflect.Value{}) {
