@@ -28,6 +28,8 @@ import (
 	client "sigs.k8s.io/controller-runtime/pkg/client"
 
 	cpv1 "github.com/crossplane/crossplane/apis/pkg/v1"
+	awsv1 "github.com/upbound/provider-aws/apis/v1beta1"
+	azrv1 "github.com/upbound/provider-azure/apis/v1beta1"
 	gcpv1 "github.com/upbound/provider-gcp/apis/v1beta1"
 
 	missionv1alpha1 "github.com/holy-tech/Mission-Control-Operator/api/mission/v1alpha1"
@@ -102,5 +104,7 @@ func (r *MissionReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&missionv1alpha1.Mission{}).
 		Owns(&gcpv1.ProviderConfig{}).
+		Owns(&awsv1.ProviderConfig{}).
+		Owns(&azrv1.ProviderConfig{}).
 		Complete(r)
 }
