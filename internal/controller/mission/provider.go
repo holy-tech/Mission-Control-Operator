@@ -37,7 +37,7 @@ func (r *MissionReconciler) ConfirmProvider(ctx context.Context, mission *missio
 			r.Recorder.Event(mission, "Warning", "Failed", message)
 			return err
 		}
-		err := r.ProviderInstalled(ctx, mission, p.Provider)
+		err := r.ConfirmProviderInstalled(ctx, mission, p.Provider)
 		if err != nil {
 			return err
 		}
@@ -45,7 +45,7 @@ func (r *MissionReconciler) ConfirmProvider(ctx context.Context, mission *missio
 	return nil
 }
 
-func (r *MissionReconciler) ProviderInstalled(ctx context.Context, mission *missionv1alpha1.Mission, providerName string) error {
+func (r *MissionReconciler) ConfirmProviderInstalled(ctx context.Context, mission *missionv1alpha1.Mission, providerName string) error {
 	if utils.Contains(utils.GetValues(ProviderMapping), providerName) {
 		k8providerName := ProviderMapping[providerName]
 		p, err := r.GetProvider(ctx, k8providerName)
