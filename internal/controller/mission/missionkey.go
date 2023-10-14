@@ -25,7 +25,7 @@ import (
 	types "k8s.io/apimachinery/pkg/types"
 )
 
-func (r *MissionReconciler) ConfirmMissionKeys(ctx context.Context, mission *missionv1alpha1.Mission) error {
+func ConfirmMissionKeys(ctx context.Context, r *MissionReconciler, mission *missionv1alpha1.Mission) error {
 	for _, pkg := range mission.Spec.Packages {
 		key := &missionv1alpha1.MissionKey{}
 		err := r.Get(ctx, types.NamespacedName{Name: pkg.Credentials.Name, Namespace: pkg.Credentials.Namespace}, key)
@@ -36,9 +36,6 @@ func (r *MissionReconciler) ConfirmMissionKeys(ctx context.Context, mission *mis
 			}
 			message := fmt.Sprintf("Provider %s: Please ensure that MissionKey \"%s\" exists in namespace \"%s\".", pkg.Provider, pkg.Credentials.Name, pkg.Credentials.Namespace)
 			r.Recorder.Event(mission, "Warning", "MissionKey not found", message)
-		} else {
-			message := fmt.Sprintf("MissionKey \"%s\" correctly linked in Namespace \"%s\".", pkg.Credentials.Name, pkg.Credentials.Namespace)
-			r.Recorder.Event(mission, "Normal", "Success", message)
 		}
 	}
 	return nil

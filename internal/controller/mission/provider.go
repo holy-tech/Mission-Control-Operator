@@ -21,23 +21,23 @@ import (
 	"errors"
 	"fmt"
 
-	types "k8s.io/apimachinery/pkg/types"
-
 	cpv1 "github.com/crossplane/crossplane/apis/pkg/v1"
 
 	missionv1alpha1 "github.com/holy-tech/Mission-Control-Operator/api/mission/v1alpha1"
 	utils "github.com/holy-tech/Mission-Control-Operator/internal/controller/utils"
 )
 
-func (r *MissionReconciler) ConfirmProvider(ctx context.Context, mission *missionv1alpha1.Mission) error {
+func UpdatePackages(ctx context.Context, r *MissionReconciler, mission *missionv1alpha1.Mission) error {
+	// Check that all the providers being used in specified mission
+	// are installed in the cluster and are supported.
+	// If they are, update package status for said provider.
 	for _, p := range mission.Spec.Packages {
-		if !utils.Contains(utils.GetSupportedProviders(), p.Provider) {
-			message := fmt.Sprintf("Provider %s is not supported, please use one of %v", p.Provider, utils.GetSupportedProviders())
-			err := errors.New(message)
-			r.Recorder.Event(mission, "Warning", "Failed", message)
+		provider, err := GetProviderInstalled(ctx, r, mission, p.Provider)
+		if err != nil {
 			return err
 		}
-		err := r.ProviderInstalled(ctx, mission, p.Provider)
+		UpdatePackageStatus(mission, provider)
+		err = r.Status().Update(ctx, mission)
 		if err != nil {
 			return err
 		}
@@ -45,30 +45,31 @@ func (r *MissionReconciler) ConfirmProvider(ctx context.Context, mission *missio
 	return nil
 }
 
-func (r *MissionReconciler) ProviderInstalled(ctx context.Context, mission *missionv1alpha1.Mission, providerName string) error {
-
-	if utils.Contains(utils.GetValues(ProviderMapping), providerName) {
-		k8providerName := ProviderMapping[providerName]
+func GetProviderInstalled(ctx context.Context, r *MissionReconciler, mission *missionv1alpha1.Mission, providerName string) (*cpv1.Provider, error) {
+	// Return provider after verifying that it is installed and supported by the software.
+	// Returns error if provider is not installed or if not supported.
+	if utils.Contains(utils.GetSupportedProviders(), providerName) {
+		k8providerName := utils.ProviderMapping[providerName]
 		p, err := r.GetProvider(ctx, k8providerName)
 		if err != nil {
 			message := fmt.Sprintf("Could not find provider %s, ensure provider is installed", k8providerName)
-			r.Recorder.Event(mission, "Warning", "Provider Not Installed", message)
-			return errors.New(message)
+			return nil, errors.New(message)
 		}
-		err = r.ReconcilePackageStatus(ctx, mission, p)
-		if err != nil {
-			return err
-		}
-	} else {
-		message := fmt.Sprintf("Provider not allowed please choose of the following (%v)", utils.GetValues(ProviderMapping))
-		r.Recorder.Event(mission, "Warning", "Provider Not Known", message)
-		return errors.New(message)
+		return p, nil
 	}
-	return nil
+	message := fmt.Sprintf("Provider not allowed please choose of the following (%v)", utils.GetSupportedProviders())
+	return nil, errors.New(message)
 }
 
-func (r *MissionReconciler) GetProvider(ctx context.Context, providerName string) (*cpv1.Provider, error) {
-	p := &cpv1.Provider{}
-	err := r.Get(ctx, types.NamespacedName{Name: providerName}, p)
-	return p, err
+func UpdatePackageStatus(mission *missionv1alpha1.Mission, provider *cpv1.Provider) {
+	if mission.Status.PackageStatus == nil {
+		mission.Status.PackageStatus = map[string]missionv1alpha1.MissionPackageStatus{}
+	}
+	ps := mission.Status.PackageStatus[provider.Name]
+	for _, c := range provider.Status.Conditions {
+		if c.Type == "Installed" {
+			ps.Installed = string(c.Status)
+		}
+	}
+	mission.Status.PackageStatus[provider.Name] = ps
 }

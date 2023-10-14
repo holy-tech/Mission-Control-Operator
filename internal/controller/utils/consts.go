@@ -16,6 +16,12 @@ limitations under the License.
 
 package utils
 
+var ProviderMapping = map[string]string{
+	"gcp":   "provider-gcp-family",
+	"aws":   "provider-aws-family",
+	"azure": "provider-azure-family",
+}
+
 func GetSupportedProviders() []string {
-	return []string{"gcp", "aws"}
+	return GetValues(ProviderMapping)
 }

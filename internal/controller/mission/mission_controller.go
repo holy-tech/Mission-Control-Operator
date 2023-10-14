@@ -19,34 +19,30 @@ package missioncontroller
 import (
 	"context"
 	"errors"
-	"os"
+	"reflect"
 
-	apiextensionsv1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
-	apiextensionsclientset "k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset"
-	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	k8serrors "k8s.io/apimachinery/pkg/api/errors"
 	runtime "k8s.io/apimachinery/pkg/runtime"
-	clientcmd "k8s.io/client-go/tools/clientcmd"
+	types "k8s.io/apimachinery/pkg/types"
 	record "k8s.io/client-go/tools/record"
 
 	ctrl "sigs.k8s.io/controller-runtime"
 	client "sigs.k8s.io/controller-runtime/pkg/client"
+	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 
 	cpv1 "github.com/crossplane/crossplane/apis/pkg/v1"
+	awsv1 "github.com/upbound/provider-aws/apis/v1beta1"
+	azrv1 "github.com/upbound/provider-azure/apis/v1beta1"
 	gcpv1 "github.com/upbound/provider-gcp/apis/v1beta1"
 
 	missionv1alpha1 "github.com/holy-tech/Mission-Control-Operator/api/mission/v1alpha1"
+	utils "github.com/holy-tech/Mission-Control-Operator/internal/controller/utils"
 )
 
 type MissionReconciler struct {
 	client.Client
 	Scheme   *runtime.Scheme
 	Recorder record.EventRecorder
-}
-
-var ProviderMapping = map[string]string{
-	"gcp":   "provider-gcp-family",
-	"aws":   "provider-aws-family",
-	"azure": "",
 }
 
 //+kubebuilder:rbac:groups=mission.mission-control.apis.io,resources=missions,verbs=get;list;watch;create;update;patch;delete
@@ -59,52 +55,64 @@ func (r *MissionReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ct
 	if err := r.Get(ctx, req.NamespacedName, mission); err != nil {
 		return ctrl.Result{}, err
 	}
-	// Confirm that crossplane is installed in the kubernetes cluster
-	if _, err := r.ConfirmCRD(ctx, "providers.pkg.crossplane.io"); err != nil {
+	if err := utils.ConfirmCRD(ctx, "providers.pkg.crossplane.io"); err != nil {
 		r.Recorder.Event(mission, "Warning", "Failed", "Crossplane installation not found")
 		return ctrl.Result{}, errors.New("could not find crossplane CRD \"Provider\"")
 	}
-	// Check that the providers being used in specified mission are installed in the cluster and are supported
-	if err := r.ConfirmProvider(ctx, mission); err != nil {
+	if err := UpdatePackages(ctx, r, mission); err != nil {
+		r.Recorder.Event(mission, "Warning", "Failed", err.Error())
 		return ctrl.Result{}, err
 	}
 	r.Recorder.Event(mission, "Normal", "Success", "Mission correctly connected to Crossplane")
 	// Create ProviderConfig that resources will reference.
-	if err := r.ReconcileProviderConfigs(ctx, mission); err != nil {
+	if err := ReconcileProviderConfigs(ctx, r, mission); err != nil {
 		return ctrl.Result{}, err
 	}
 	r.Recorder.Event(mission, "Normal", "Success", "ProviderConfig correctly created")
 	// Confirm that mission key exists, if not create warning.
-	if err := r.ConfirmMissionKeys(ctx, mission); err != nil {
+	if err := ConfirmMissionKeys(ctx, r, mission); err != nil {
 		return ctrl.Result{}, err
 	}
+	r.Recorder.Event(mission, "Normal", "Success", "Mission keys correctly synced")
 	return ctrl.Result{}, nil
 }
 
-func (r *MissionReconciler) ConfirmCRD(ctx context.Context, crdNameVersion string) (*apiextensionsv1.CustomResourceDefinition, error) {
-	clientConfig, _ := clientcmd.BuildConfigFromFlags("", os.Getenv("HOME")+"/.kube/config")
-	clientset, _ := apiextensionsclientset.NewForConfig(clientConfig)
-	crd, err := clientset.ApiextensionsV1().CustomResourceDefinitions().Get(ctx, crdNameVersion, v1.GetOptions{})
-	return crd, err
+func (r *MissionReconciler) GetProvider(ctx context.Context, providerName string) (*cpv1.Provider, error) {
+	p := &cpv1.Provider{}
+	err := r.Get(ctx, types.NamespacedName{Name: providerName}, p)
+	return p, err
 }
 
-func (r *MissionReconciler) ReconcilePackageStatus(ctx context.Context, mission *missionv1alpha1.Mission, provider *cpv1.Provider) error {
-	if mission.Status.PackageStatus == nil {
-		mission.Status.PackageStatus = map[string]missionv1alpha1.MissionPackageStatus{}
+func (r *MissionReconciler) ApplyGenericProviderConfig(ctx context.Context, mission *missionv1alpha1.Mission, providerConfig, expectedProviderConfig utils.MissionObject) error {
+	pcSpec := utils.GetValueOf(providerConfig, "Spec")
+	epcSpec := utils.GetValueOf(expectedProviderConfig, "Spec")
+	if pcSpec.Equal(reflect.Value{}) || epcSpec.Equal(reflect.Value{}) {
+		return errors.New("Could not apply ProviderConfig")
 	}
-	ps := mission.Status.PackageStatus[provider.Name]
-	for _, c := range provider.Status.Conditions {
-		if c.Type == "Installed" {
-			ps.Installed = string(c.Status)
+	if err := controllerutil.SetControllerReference(mission, expectedProviderConfig, r.Scheme); err != nil {
+		return err
+	}
+	if err := r.Get(ctx, types.NamespacedName{Name: expectedProviderConfig.GetName()}, providerConfig); err != nil {
+		if k8serrors.IsNotFound(err) {
+			return r.Create(ctx, expectedProviderConfig)
 		}
+	} else if !reflect.DeepEqual(pcSpec, epcSpec) {
+		expectedProviderConfig.SetUID(providerConfig.GetUID())
+		expectedProviderConfig.SetResourceVersion(providerConfig.GetResourceVersion())
+		if err := utils.SetValueOf(providerConfig, "Spec", epcSpec); err != nil {
+			return err
+		}
+		err := r.Update(ctx, providerConfig)
+		return err
 	}
-	mission.Status.PackageStatus[provider.Name] = ps
-	return r.Status().Update(ctx, mission)
+	return nil
 }
 
 func (r *MissionReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&missionv1alpha1.Mission{}).
 		Owns(&gcpv1.ProviderConfig{}).
+		Owns(&awsv1.ProviderConfig{}).
+		Owns(&azrv1.ProviderConfig{}).
 		Complete(r)
 }
