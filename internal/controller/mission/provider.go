@@ -46,7 +46,6 @@ func (r *MissionReconciler) ConfirmProvider(ctx context.Context, mission *missio
 }
 
 func (r *MissionReconciler) ProviderInstalled(ctx context.Context, mission *missionv1alpha1.Mission, providerName string) error {
-
 	if utils.Contains(utils.GetValues(ProviderMapping), providerName) {
 		k8providerName := ProviderMapping[providerName]
 		p, err := r.GetProvider(ctx, k8providerName)
@@ -55,7 +54,8 @@ func (r *MissionReconciler) ProviderInstalled(ctx context.Context, mission *miss
 			r.Recorder.Event(mission, "Warning", "Provider Not Installed", message)
 			return errors.New(message)
 		}
-		err = r.ReconcilePackageStatus(ctx, mission, p)
+		UpdatePackageStatus(mission, p)
+		err = r.Status().Update(ctx, mission)
 		if err != nil {
 			return err
 		}
@@ -65,6 +65,19 @@ func (r *MissionReconciler) ProviderInstalled(ctx context.Context, mission *miss
 		return errors.New(message)
 	}
 	return nil
+}
+
+func UpdatePackageStatus(mission *missionv1alpha1.Mission, provider *cpv1.Provider) {
+	if mission.Status.PackageStatus == nil {
+		mission.Status.PackageStatus = map[string]missionv1alpha1.MissionPackageStatus{}
+	}
+	ps := mission.Status.PackageStatus[provider.Name]
+	for _, c := range provider.Status.Conditions {
+		if c.Type == "Installed" {
+			ps.Installed = string(c.Status)
+		}
+	}
+	mission.Status.PackageStatus[provider.Name] = ps
 }
 
 func (r *MissionReconciler) GetProvider(ctx context.Context, providerName string) (*cpv1.Provider, error) {
