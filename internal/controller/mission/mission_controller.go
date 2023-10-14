@@ -42,12 +42,6 @@ type MissionReconciler struct {
 	Recorder record.EventRecorder
 }
 
-var ProviderMapping = map[string]string{
-	"gcp":   "provider-gcp-family",
-	"aws":   "provider-aws-family",
-	"azure": "provider-azure-family",
-}
-
 //+kubebuilder:rbac:groups=mission.mission-control.apis.io,resources=missions,verbs=get;list;watch;create;update;patch;delete
 //+kubebuilder:rbac:groups=mission.mission-control.apis.io,resources=missions/status,verbs=get;update;patch
 //+kubebuilder:rbac:groups=mission.mission-control.apis.io,resources=missions/finalizers,verbs=update
@@ -63,7 +57,7 @@ func (r *MissionReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ct
 		r.Recorder.Event(mission, "Warning", "Failed", "Crossplane installation not found")
 		return ctrl.Result{}, errors.New("could not find crossplane CRD \"Provider\"")
 	}
-	// Check that the providers being used in specified mission are installed in the cluster and are supported
+
 	if err := ConfirmProvider(ctx, r, mission); err != nil {
 		r.Recorder.Event(mission, "Warning", "Failed", err.Error())
 		return ctrl.Result{}, err
