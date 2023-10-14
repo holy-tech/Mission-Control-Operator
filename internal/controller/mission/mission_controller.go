@@ -70,6 +70,7 @@ func (r *MissionReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ct
 	if err := r.ConfirmMissionKeys(ctx, mission); err != nil {
 		return ctrl.Result{}, err
 	}
+	r.Recorder.Event(mission, "Normal", "Success", "Mission keys correctly synced")
 	return ctrl.Result{}, nil
 }
 
