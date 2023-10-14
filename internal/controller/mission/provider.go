@@ -34,7 +34,6 @@ func (r *MissionReconciler) ConfirmProvider(ctx context.Context, mission *missio
 		if !utils.Contains(utils.GetSupportedProviders(), p.Provider) {
 			message := fmt.Sprintf("Provider %s is not supported, please use one of %v", p.Provider, utils.GetSupportedProviders())
 			err := errors.New(message)
-			r.Recorder.Event(mission, "Warning", "Failed", message)
 			return err
 		}
 		err := r.ConfirmProviderInstalled(ctx, mission, p.Provider)
@@ -51,7 +50,6 @@ func (r *MissionReconciler) ConfirmProviderInstalled(ctx context.Context, missio
 		p, err := r.GetProvider(ctx, k8providerName)
 		if err != nil {
 			message := fmt.Sprintf("Could not find provider %s, ensure provider is installed", k8providerName)
-			r.Recorder.Event(mission, "Warning", "Provider Not Installed", message)
 			return errors.New(message)
 		}
 		UpdatePackageStatus(mission, p)
@@ -61,7 +59,6 @@ func (r *MissionReconciler) ConfirmProviderInstalled(ctx context.Context, missio
 		}
 	} else {
 		message := fmt.Sprintf("Provider not allowed please choose of the following (%v)", utils.GetValues(ProviderMapping))
-		r.Recorder.Event(mission, "Warning", "Provider Not Known", message)
 		return errors.New(message)
 	}
 	return nil

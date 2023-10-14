@@ -65,6 +65,7 @@ func (r *MissionReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ct
 	}
 	// Check that the providers being used in specified mission are installed in the cluster and are supported
 	if err := r.ConfirmProvider(ctx, mission); err != nil {
+		r.Recorder.Event(mission, "Warning", "Failed", err.Error())
 		return ctrl.Result{}, err
 	}
 	r.Recorder.Event(mission, "Normal", "Success", "Mission correctly connected to Crossplane")
