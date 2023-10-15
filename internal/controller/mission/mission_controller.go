@@ -85,26 +85,26 @@ func (r *MissionReconciler) GetProvider(ctx context.Context, providerName string
 	return p, err
 }
 
-func (r *MissionReconciler) ApplyGenericProviderConfig(ctx context.Context, mission *missionv1alpha1.Mission, providerConfig, expectedProviderConfig utils.MissionObject) error {
-	pcSpec := utils.GetValueOf(providerConfig, "Spec")
-	epcSpec := utils.GetValueOf(expectedProviderConfig, "Spec")
+func (r *MissionReconciler) ReconcileObject(ctx context.Context, mission *missionv1alpha1.Mission, object, expectedObject client.Object) error {
+	pcSpec := utils.GetValueOf(object, "Spec")
+	epcSpec := utils.GetValueOf(expectedObject, "Spec")
 	if pcSpec.Equal(reflect.Value{}) || epcSpec.Equal(reflect.Value{}) {
-		return errors.New("Could not apply ProviderConfig")
+		return errors.New("Could not reconcile object type")
 	}
-	if err := controllerutil.SetControllerReference(mission, expectedProviderConfig, r.Scheme); err != nil {
+	if err := controllerutil.SetControllerReference(mission, expectedObject, r.Scheme); err != nil {
 		return err
 	}
-	if err := r.Get(ctx, types.NamespacedName{Name: expectedProviderConfig.GetName()}, providerConfig); err != nil {
+	if err := r.Get(ctx, types.NamespacedName{Name: expectedObject.GetName()}, object); err != nil {
 		if k8serrors.IsNotFound(err) {
-			return r.Create(ctx, expectedProviderConfig)
+			return r.Create(ctx, expectedObject)
 		}
 	} else if !reflect.DeepEqual(pcSpec, epcSpec) {
-		expectedProviderConfig.SetUID(providerConfig.GetUID())
-		expectedProviderConfig.SetResourceVersion(providerConfig.GetResourceVersion())
-		if err := utils.SetValueOf(providerConfig, "Spec", epcSpec); err != nil {
+		expectedObject.SetUID(object.GetUID())
+		expectedObject.SetResourceVersion(object.GetResourceVersion())
+		if err := utils.SetValueOf(object, "Spec", epcSpec); err != nil {
 			return err
 		}
-		err := r.Update(ctx, providerConfig)
+		err := r.Update(ctx, object)
 		return err
 	}
 	return nil

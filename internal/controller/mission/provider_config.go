@@ -48,7 +48,7 @@ func ReconcileProviderConfigByProvider(ctx context.Context, r *MissionReconciler
 		if err != nil {
 			return err
 		}
-		err = r.ApplyGenericProviderConfig(
+		err = r.ReconcileObject(
 			ctx,
 			mission,
 			&gcpv1.ProviderConfig{},
@@ -59,7 +59,7 @@ func ReconcileProviderConfigByProvider(ctx context.Context, r *MissionReconciler
 		if err != nil {
 			return err
 		}
-		err = r.ApplyGenericProviderConfig(
+		err = r.ReconcileObject(
 			ctx,
 			mission,
 			&awsv1.ProviderConfig{},
@@ -70,7 +70,7 @@ func ReconcileProviderConfigByProvider(ctx context.Context, r *MissionReconciler
 		if err != nil {
 			return err
 		}
-		err = r.ApplyGenericProviderConfig(
+		err = r.ReconcileObject(
 			ctx,
 			mission,
 			&azrv1.ProviderConfig{},
