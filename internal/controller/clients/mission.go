@@ -59,9 +59,13 @@ func (r *MissionClient) GetMissionKey(ctx context.Context, mission *v1alpha1.Mis
 	return &v1alpha1.MissionKey{}, errors.New(msg)
 }
 
-func (m *MissionClient) ReconcileObject(ctx context.Context, owner metav1.Object, object, expectedObject client.Object) error {
-	pcSpec := utils.GetValueOf(object, "Spec")
-	epcSpec := utils.GetValueOf(expectedObject, "Spec")
+func (m *MissionClient) ReconcileObject(ctx context.Context, owner metav1.Object, object, expectedObject client.Object, specPaths ...string) error {
+	specPath := "Spec"
+	if len(specPaths) != 0 {
+		specPath = specPaths[0]
+	}
+	pcSpec := utils.GetValueOf(object, specPath)
+	epcSpec := utils.GetValueOf(expectedObject, specPath)
 	if pcSpec.Equal(reflect.Value{}) || epcSpec.Equal(reflect.Value{}) {
 		return errors.New("Could not reconcile object type")
 	}
@@ -75,7 +79,7 @@ func (m *MissionClient) ReconcileObject(ctx context.Context, owner metav1.Object
 	} else if !reflect.DeepEqual(pcSpec, epcSpec) {
 		expectedObject.SetUID(object.GetUID())
 		expectedObject.SetResourceVersion(object.GetResourceVersion())
-		if err := utils.SetValueOf(object, "Spec", epcSpec); err != nil {
+		if err := utils.SetValueOf(object, specPath, epcSpec); err != nil {
 			return err
 		}
 		err := m.Update(ctx, object)
