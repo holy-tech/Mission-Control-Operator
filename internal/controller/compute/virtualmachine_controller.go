@@ -24,12 +24,12 @@ import (
 	ctrl "sigs.k8s.io/controller-runtime"
 
 	computev1alpha1 "github.com/holy-tech/Mission-Control-Operator/api/compute/v1alpha1"
-	utils "github.com/holy-tech/Mission-Control-Operator/internal/controller/utils"
+	clients "github.com/holy-tech/Mission-Control-Operator/internal/controller/clients"
 	gcpcomputev1 "github.com/upbound/provider-gcp/apis/compute/v1beta1"
 )
 
 type VirtualMachineReconciler struct {
-	utils.MissionClient
+	clients.MissionClient
 	Scheme   *runtime.Scheme
 	Recorder record.EventRecorder
 }

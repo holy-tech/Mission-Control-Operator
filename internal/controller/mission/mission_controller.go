@@ -30,11 +30,12 @@ import (
 	gcpv1 "github.com/upbound/provider-gcp/apis/v1beta1"
 
 	missionv1alpha1 "github.com/holy-tech/Mission-Control-Operator/api/mission/v1alpha1"
+	clients "github.com/holy-tech/Mission-Control-Operator/internal/controller/clients"
 	utils "github.com/holy-tech/Mission-Control-Operator/internal/controller/utils"
 )
 
 type MissionReconciler struct {
-	utils.MissionClient
+	clients.MissionClient
 	Scheme   *runtime.Scheme
 	Recorder record.EventRecorder
 }
