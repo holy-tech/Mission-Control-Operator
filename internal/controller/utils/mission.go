@@ -20,9 +20,13 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"reflect"
 
+	k8serrors "k8s.io/apimachinery/pkg/api/errors"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	types "k8s.io/apimachinery/pkg/types"
 	client "sigs.k8s.io/controller-runtime/pkg/client"
+	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 
 	v1alpha1 "github.com/holy-tech/Mission-Control-Operator/api/mission/v1alpha1"
 )
@@ -52,4 +56,29 @@ func (r *MissionClient) GetMissionKey(ctx context.Context, mission *v1alpha1.Mis
 	}
 	msg := fmt.Sprintf("No credentials %s", keyName)
 	return &v1alpha1.MissionKey{}, errors.New(msg)
+}
+
+func (m *MissionClient) ReconcileObject(ctx context.Context, owner metav1.Object, object, expectedObject client.Object) error {
+	pcSpec := GetValueOf(object, "Spec")
+	epcSpec := GetValueOf(expectedObject, "Spec")
+	if pcSpec.Equal(reflect.Value{}) || epcSpec.Equal(reflect.Value{}) {
+		return errors.New("Could not reconcile object type")
+	}
+	if err := controllerutil.SetControllerReference(owner, expectedObject, m.Scheme()); err != nil {
+		return err
+	}
+	if err := m.Get(ctx, types.NamespacedName{Name: expectedObject.GetName()}, object); err != nil {
+		if k8serrors.IsNotFound(err) {
+			return m.Create(ctx, expectedObject)
+		}
+	} else if !reflect.DeepEqual(pcSpec, epcSpec) {
+		expectedObject.SetUID(object.GetUID())
+		expectedObject.SetResourceVersion(object.GetResourceVersion())
+		if err := SetValueOf(object, "Spec", epcSpec); err != nil {
+			return err
+		}
+		err := m.Update(ctx, object)
+		return err
+	}
+	return nil
 }
