@@ -21,9 +21,8 @@ import (
 	"errors"
 	"fmt"
 
-	"strings"
-
 	missionv1alpha1 "github.com/holy-tech/Mission-Control-Operator/api/mission/v1alpha1"
+	utils "github.com/holy-tech/Mission-Control-Operator/internal/controller/utils"
 	awsv1 "github.com/upbound/provider-aws/apis/v1beta1"
 	azrv1 "github.com/upbound/provider-azure/apis/v1beta1"
 	gcpv1 "github.com/upbound/provider-gcp/apis/v1beta1"
@@ -49,19 +48,34 @@ func ReconcileProviderConfigByProvider(ctx context.Context, r *MissionReconciler
 		if err != nil {
 			return err
 		}
-		err = ApplyProviderConfigGCP(ctx, r, mission, packageId)
+		err = r.ReconcileObject(
+			ctx,
+			mission,
+			&gcpv1.ProviderConfig{},
+			mission.Convert2GCP(pkg),
+		)
 	} else if pkg.Provider == "aws" {
 		err = mission.AWSVerify()
 		if err != nil {
 			return err
 		}
-		err = ApplyProviderConfigAWS(ctx, r, mission, packageId)
+		err = r.ReconcileObject(
+			ctx,
+			mission,
+			&awsv1.ProviderConfig{},
+			mission.Convert2AWS(pkg),
+		)
 	} else if pkg.Provider == "azure" {
 		err = mission.AzureVerify()
 		if err != nil {
 			return err
 		}
-		err = ApplyProviderConfigAzure(ctx, r, mission, packageId)
+		err = r.ReconcileObject(
+			ctx,
+			mission,
+			&azrv1.ProviderConfig{},
+			mission.Convert2Azure(pkg),
+		)
 	} else {
 		message := fmt.Sprintf("Provider %s not known", pkg.Provider)
 		err = errors.New(message)
@@ -72,26 +86,14 @@ func ReconcileProviderConfigByProvider(ctx context.Context, r *MissionReconciler
 	return nil
 }
 
-func ApplyProviderConfigGCP(ctx context.Context, r *MissionReconciler, mission *missionv1alpha1.Mission, packageId int) error {
-	pkg := &mission.Spec.Packages[packageId]
-	providerName := mission.Name + "-" + strings.ToLower(pkg.Provider)
-	providerConfig := &gcpv1.ProviderConfig{}
-	expectedProviderConfig := mission.Convert2GCP(providerName, pkg)
-	return r.ApplyGenericProviderConfig(ctx, mission, providerConfig, expectedProviderConfig)
-}
-
-func ApplyProviderConfigAWS(ctx context.Context, r *MissionReconciler, mission *missionv1alpha1.Mission, packageId int) error {
-	pkg := &mission.Spec.Packages[packageId]
-	providerName := mission.Name + "-" + strings.ToLower(pkg.Provider)
-	providerConfig := &awsv1.ProviderConfig{}
-	expectedProviderConfig := mission.Convert2AWS(providerName, pkg)
-	return r.ApplyGenericProviderConfig(ctx, mission, providerConfig, expectedProviderConfig)
-}
-
-func ApplyProviderConfigAzure(ctx context.Context, r *MissionReconciler, mission *missionv1alpha1.Mission, packageId int) error {
-	pkg := &mission.Spec.Packages[packageId]
-	providerName := mission.Name + "-" + strings.ToLower(pkg.Provider)
-	providerConfig := &azrv1.ProviderConfig{}
-	expectedProviderConfig := mission.Convert2Azure(providerName, pkg)
-	return r.ApplyGenericProviderConfig(ctx, mission, providerConfig, expectedProviderConfig)
+func ConfirmProviderConfigs(ctx context.Context, mission *missionv1alpha1.Mission) error {
+	// Check that all providers being used in specified mission
+	// are installed in the cluster and are supported.
+	for _, p := range mission.Spec.Packages {
+		providerCRD := fmt.Sprintf("providerconfigs.%s.upbound.io", p.Provider)
+		if err := utils.ConfirmCRD(ctx, providerCRD); err != nil {
+			return err
+		}
+	}
+	return nil
 }

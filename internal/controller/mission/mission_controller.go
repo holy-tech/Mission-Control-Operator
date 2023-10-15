@@ -19,18 +19,12 @@ package missioncontroller
 import (
 	"context"
 	"errors"
-	"reflect"
 
-	k8serrors "k8s.io/apimachinery/pkg/api/errors"
 	runtime "k8s.io/apimachinery/pkg/runtime"
-	types "k8s.io/apimachinery/pkg/types"
 	record "k8s.io/client-go/tools/record"
 
 	ctrl "sigs.k8s.io/controller-runtime"
-	client "sigs.k8s.io/controller-runtime/pkg/client"
-	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 
-	cpv1 "github.com/crossplane/crossplane/apis/pkg/v1"
 	awsv1 "github.com/upbound/provider-aws/apis/v1beta1"
 	azrv1 "github.com/upbound/provider-azure/apis/v1beta1"
 	gcpv1 "github.com/upbound/provider-gcp/apis/v1beta1"
@@ -40,7 +34,7 @@ import (
 )
 
 type MissionReconciler struct {
-	client.Client
+	utils.MissionClient
 	Scheme   *runtime.Scheme
 	Recorder record.EventRecorder
 }
@@ -55,57 +49,28 @@ func (r *MissionReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ct
 	if err := r.Get(ctx, req.NamespacedName, mission); err != nil {
 		return ctrl.Result{}, err
 	}
+	// Ensure crossplane is installed in the kubernetes cluster
 	if err := utils.ConfirmCRD(ctx, "providers.pkg.crossplane.io"); err != nil {
 		r.Recorder.Event(mission, "Warning", "Failed", "Crossplane installation not found")
 		return ctrl.Result{}, errors.New("could not find crossplane CRD \"Provider\"")
 	}
-	if err := UpdatePackages(ctx, r, mission); err != nil {
+	// Ensure crossplane providers are installed in the kubernetes cluster
+	if err := ConfirmProviderConfigs(ctx, mission); err != nil {
 		r.Recorder.Event(mission, "Warning", "Failed", err.Error())
 		return ctrl.Result{}, err
 	}
 	r.Recorder.Event(mission, "Normal", "Success", "Mission correctly connected to Crossplane")
-	// Create ProviderConfig that resources will reference.
+	// Create ProviderConfigs that resources will reference.
 	if err := ReconcileProviderConfigs(ctx, r, mission); err != nil {
 		return ctrl.Result{}, err
 	}
 	r.Recorder.Event(mission, "Normal", "Success", "ProviderConfig correctly created")
-	// Confirm that mission key exists, if not create warning.
+	// Warn if mission keys are not created.
 	if err := ConfirmMissionKeys(ctx, r, mission); err != nil {
 		return ctrl.Result{}, err
 	}
 	r.Recorder.Event(mission, "Normal", "Success", "Mission keys correctly synced")
 	return ctrl.Result{}, nil
-}
-
-func (r *MissionReconciler) GetProvider(ctx context.Context, providerName string) (*cpv1.Provider, error) {
-	p := &cpv1.Provider{}
-	err := r.Get(ctx, types.NamespacedName{Name: providerName}, p)
-	return p, err
-}
-
-func (r *MissionReconciler) ApplyGenericProviderConfig(ctx context.Context, mission *missionv1alpha1.Mission, providerConfig, expectedProviderConfig utils.MissionObject) error {
-	pcSpec := utils.GetValueOf(providerConfig, "Spec")
-	epcSpec := utils.GetValueOf(expectedProviderConfig, "Spec")
-	if pcSpec.Equal(reflect.Value{}) || epcSpec.Equal(reflect.Value{}) {
-		return errors.New("Could not apply ProviderConfig")
-	}
-	if err := controllerutil.SetControllerReference(mission, expectedProviderConfig, r.Scheme); err != nil {
-		return err
-	}
-	if err := r.Get(ctx, types.NamespacedName{Name: expectedProviderConfig.GetName()}, providerConfig); err != nil {
-		if k8serrors.IsNotFound(err) {
-			return r.Create(ctx, expectedProviderConfig)
-		}
-	} else if !reflect.DeepEqual(pcSpec, epcSpec) {
-		expectedProviderConfig.SetUID(providerConfig.GetUID())
-		expectedProviderConfig.SetResourceVersion(providerConfig.GetResourceVersion())
-		if err := utils.SetValueOf(providerConfig, "Spec", epcSpec); err != nil {
-			return err
-		}
-		err := r.Update(ctx, providerConfig)
-		return err
-	}
-	return nil
 }
 
 func (r *MissionReconciler) SetupWithManager(mgr ctrl.Manager) error {

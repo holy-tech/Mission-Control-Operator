@@ -52,14 +52,6 @@ spec:
                 type: array
             type: object
           status:
-            properties:
-              package_status:
-                additionalProperties:
-                  properties:
-                    installed:
-                      type: string
-                  type: object
-                type: object
             type: object
         type: object
     served: true

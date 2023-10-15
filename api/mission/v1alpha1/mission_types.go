@@ -32,16 +32,11 @@ type PackageConfig struct {
 	Credentials CredentialConfig `json:"credentials,omitempty"`
 }
 
-type MissionPackageStatus struct {
-	Installed string `json:"installed,omitempty"`
-}
-
 type MissionSpec struct {
 	Packages []PackageConfig `json:"packages,omitempty"`
 }
 
 type MissionStatus struct {
-	PackageStatus map[string]MissionPackageStatus `json:"package_status,omitempty"`
 }
 
 //+kubebuilder:object:root=true

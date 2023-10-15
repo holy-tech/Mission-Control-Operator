@@ -33,6 +33,7 @@ import (
 	zap "sigs.k8s.io/controller-runtime/pkg/log/zap"
 
 	missionv1alpha1 "github.com/holy-tech/Mission-Control-Operator/api/mission/v1alpha1"
+	utils "github.com/holy-tech/Mission-Control-Operator/internal/controller/utils"
 	//+kubebuilder:scaffold:imports
 )
 
@@ -79,7 +80,9 @@ var _ = BeforeSuite(func() {
 	Expect(err).ToNot(HaveOccurred())
 
 	err = (&MissionReconciler{
-		Client: k8sManager.GetClient(),
+		MissionClient: utils.MissionClient{
+			Client: k8sManager.GetClient(),
+		},
 		Scheme: k8sManager.GetScheme(),
 	}).SetupWithManager(k8sManager)
 	Expect(err).ToNot(HaveOccurred())
