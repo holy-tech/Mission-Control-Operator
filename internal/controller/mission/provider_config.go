@@ -48,19 +48,34 @@ func ReconcileProviderConfigByProvider(ctx context.Context, r *MissionReconciler
 		if err != nil {
 			return err
 		}
-		err = ApplyProviderConfigGCP(ctx, r, mission, packageId)
+		err = r.ApplyGenericProviderConfig(
+			ctx,
+			mission,
+			&gcpv1.ProviderConfig{},
+			mission.Convert2GCP(pkg),
+		)
 	} else if pkg.Provider == "aws" {
 		err = mission.AWSVerify()
 		if err != nil {
 			return err
 		}
-		err = ApplyProviderConfigAWS(ctx, r, mission, packageId)
+		err = r.ApplyGenericProviderConfig(
+			ctx,
+			mission,
+			&awsv1.ProviderConfig{},
+			mission.Convert2AWS(pkg),
+		)
 	} else if pkg.Provider == "azure" {
 		err = mission.AzureVerify()
 		if err != nil {
 			return err
 		}
-		err = ApplyProviderConfigAzure(ctx, r, mission, packageId)
+		err = r.ApplyGenericProviderConfig(
+			ctx,
+			mission,
+			&azrv1.ProviderConfig{},
+			mission.Convert2Azure(pkg),
+		)
 	} else {
 		message := fmt.Sprintf("Provider %s not known", pkg.Provider)
 		err = errors.New(message)
@@ -69,27 +84,6 @@ func ReconcileProviderConfigByProvider(ctx context.Context, r *MissionReconciler
 		return err
 	}
 	return nil
-}
-
-func ApplyProviderConfigGCP(ctx context.Context, r *MissionReconciler, mission *missionv1alpha1.Mission, packageId int) error {
-	pkg := &mission.Spec.Packages[packageId]
-	templateProviderConfig := &gcpv1.ProviderConfig{}
-	expectedProviderConfig := mission.Convert2GCP(pkg)
-	return r.ApplyGenericProviderConfig(ctx, mission, templateProviderConfig, expectedProviderConfig)
-}
-
-func ApplyProviderConfigAWS(ctx context.Context, r *MissionReconciler, mission *missionv1alpha1.Mission, packageId int) error {
-	pkg := &mission.Spec.Packages[packageId]
-	templateProviderConfig := &awsv1.ProviderConfig{}
-	expectedProviderConfig := mission.Convert2AWS(pkg)
-	return r.ApplyGenericProviderConfig(ctx, mission, templateProviderConfig, expectedProviderConfig)
-}
-
-func ApplyProviderConfigAzure(ctx context.Context, r *MissionReconciler, mission *missionv1alpha1.Mission, packageId int) error {
-	pkg := &mission.Spec.Packages[packageId]
-	templateProviderConfig := &azrv1.ProviderConfig{}
-	expectedProviderConfig := mission.Convert2Azure(pkg)
-	return r.ApplyGenericProviderConfig(ctx, mission, templateProviderConfig, expectedProviderConfig)
 }
 
 func ConfirmProviderConfigs(ctx context.Context, mission *missionv1alpha1.Mission) error {
