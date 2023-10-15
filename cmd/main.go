@@ -41,6 +41,7 @@ import (
 	storagev1alpha1 "github.com/holy-tech/Mission-Control-Operator/api/storage/v1alpha1"
 	missioncontroler "github.com/holy-tech/Mission-Control-Operator/internal/controller/mission"
 	missionkeycontroler "github.com/holy-tech/Mission-Control-Operator/internal/controller/missionkey"
+	utils "github.com/holy-tech/Mission-Control-Operator/internal/controller/utils"
 	//+kubebuilder:scaffold:imports
 )
 
@@ -104,7 +105,9 @@ func main() {
 	}
 
 	if err = (&missioncontroler.MissionReconciler{
-		Client:   mgr.GetClient(),
+		MissionClient: utils.MissionClient{
+			Client: mgr.GetClient(),
+		},
 		Scheme:   mgr.GetScheme(),
 		Recorder: mgr.GetEventRecorderFor("Mission"),
 	}).SetupWithManager(mgr); err != nil {
