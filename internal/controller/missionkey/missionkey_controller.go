@@ -18,8 +18,6 @@ package missionkeycontroller
 
 import (
 	"context"
-	"errors"
-	"fmt"
 
 	v1 "k8s.io/api/core/v1"
 	runtime "k8s.io/apimachinery/pkg/runtime"
@@ -49,12 +47,8 @@ func (r *MissionKeyReconciler) Reconcile(ctx context.Context, req ctrl.Request) 
 	if err != nil {
 		return ctrl.Result{}, err
 	}
-
-	if !utils.Contains(utils.GetSupportedProviders(), key.Spec.Type) {
-		message := fmt.Sprintf("Key of provider type %s is not supported, please use one of %v", key.Spec.Type, utils.GetSupportedProviders())
-		err := errors.New(message)
-		r.Recorder.Event(key, "Warning", "Failed", message)
-		return ctrl.Result{}, err
+	if err := key.GenericVerify(); err != nil {
+		r.Recorder.Event(key, "Warning", "Failed", err.Error())
 	}
 	if err := r.CreateSecret(ctx, req, key); err != nil {
 		return ctrl.Result{}, err

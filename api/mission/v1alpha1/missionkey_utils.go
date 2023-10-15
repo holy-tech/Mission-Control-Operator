@@ -16,6 +16,13 @@ limitations under the License.
 
 package v1alpha1
 
+import (
+	"errors"
+	"fmt"
+
+	utils "github.com/holy-tech/Mission-Control-Operator/internal/controller/utils"
+)
+
 func (k *MissionKey) GCPVerify() bool {
 	k.GenericVerify()
 	return true
@@ -31,6 +38,11 @@ func (k *MissionKey) AzureVerify() bool {
 	return true
 }
 
-func (k *MissionKey) GenericVerify() bool {
-	return true
+func (k *MissionKey) GenericVerify() error {
+	if !utils.Contains(utils.GetSupportedProviders(), k.Spec.Type) {
+		message := fmt.Sprintf("Key of provider type %s is not supported, please use one of %v", k.Spec.Type, utils.GetSupportedProviders())
+		err := errors.New(message)
+		return err
+	}
+	return nil
 }
