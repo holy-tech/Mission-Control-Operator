@@ -18,37 +18,22 @@ package missionkeycontroller
 
 import (
 	"context"
-	"reflect"
 
 	v1 "k8s.io/api/core/v1"
-	k8serrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	ctrl "sigs.k8s.io/controller-runtime"
-	controllerutil "sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 
 	missionv1alpha1 "github.com/holy-tech/Mission-Control-Operator/api/mission/v1alpha1"
 )
 
-func (r *MissionKeyReconciler) CreateSecret(ctx context.Context, req ctrl.Request, key *missionv1alpha1.MissionKey) error {
-	secret := v1.Secret{
+func (r *MissionKeyReconciler) ReconcileSecret(ctx context.Context, req ctrl.Request, key *missionv1alpha1.MissionKey) error {
+	secret := &v1.Secret{
 		Data: map[string][]byte{"creds": key.Spec.Data},
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      req.Name,
 			Namespace: req.Namespace,
 		},
 	}
-	if err := controllerutil.SetControllerReference(key, &secret, r.Scheme); err != nil {
-		return err
-	}
-	if err := r.Get(ctx, req.NamespacedName, &secret); err != nil {
-		if k8serrors.IsNotFound(err) {
-			return r.Create(ctx, &secret)
-		}
-		return err
-	} else if !reflect.DeepEqual(key.Spec.Data, secret.Data["creds"]) {
-		secret.Data = map[string][]byte{"creds": key.Spec.Data}
-		return r.Update(ctx, &secret)
-	}
-	return nil
+	return r.ReconcileObject(ctx, key, &v1.Secret{}, secret)
 }

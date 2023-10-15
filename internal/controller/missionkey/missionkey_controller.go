@@ -24,15 +24,13 @@ import (
 	record "k8s.io/client-go/tools/record"
 
 	ctrl "sigs.k8s.io/controller-runtime"
-	client "sigs.k8s.io/controller-runtime/pkg/client"
-	reconcile "sigs.k8s.io/controller-runtime/pkg/reconcile"
 
 	missionv1alpha1 "github.com/holy-tech/Mission-Control-Operator/api/mission/v1alpha1"
-	utils "github.com/holy-tech/Mission-Control-Operator/internal/controller/utils"
+	clients "github.com/holy-tech/Mission-Control-Operator/internal/controller/clients"
 )
 
 type MissionKeyReconciler struct {
-	client.Client
+	clients.MissionClient
 	Scheme   *runtime.Scheme
 	Recorder record.EventRecorder
 }
@@ -47,41 +45,18 @@ func (r *MissionKeyReconciler) Reconcile(ctx context.Context, req ctrl.Request) 
 	if err != nil {
 		return ctrl.Result{}, err
 	}
+	// Ensure MissionKey is correct
 	if err := key.GenericVerify(); err != nil {
 		r.Recorder.Event(key, "Warning", "Failed", err.Error())
 	}
-	if err := r.CreateSecret(ctx, req, key); err != nil {
+	if err := r.ReconcileSecret(ctx, req, key); err != nil {
 		return ctrl.Result{}, err
 	}
 	if err := r.CreateServiceAccount(ctx, req, key); err != nil {
 		return ctrl.Result{}, err
 	}
-	if err := r.ManageFinalizer(key); err != nil {
-		return reconcile.Result{}, err
-	}
 
 	return ctrl.Result{}, nil
-}
-
-func (r *MissionKeyReconciler) ManageFinalizer(key *missionv1alpha1.MissionKey) error {
-	keyFinalizer := key.Spec.Name
-	if key.ObjectMeta.DeletionTimestamp.IsZero() {
-		if !utils.Contains(key.ObjectMeta.Finalizers, keyFinalizer) {
-			key.ObjectMeta.Finalizers = append(key.ObjectMeta.Finalizers, keyFinalizer)
-			if err := r.Update(context.Background(), key); err != nil {
-				return err
-			}
-		}
-	}
-	if key.ObjectMeta.DeletionTimestamp != nil {
-		// Delete secret and SA and check for err HERE
-
-		key.ObjectMeta.Finalizers = utils.RemoveString(key.ObjectMeta.Finalizers, keyFinalizer)
-		if err := r.Update(context.Background(), key); err != nil {
-			return err
-		}
-	}
-	return nil
 }
 
 func (r *MissionKeyReconciler) SetupWithManager(mgr ctrl.Manager) error {
