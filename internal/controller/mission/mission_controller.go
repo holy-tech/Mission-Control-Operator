@@ -49,23 +49,23 @@ func (r *MissionReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ct
 	if err := r.Get(ctx, req.NamespacedName, mission); err != nil {
 		return ctrl.Result{}, err
 	}
-	// Confirm that crossplane is installed in the kubernetes cluster
+	// Ensure crossplane is installed in the kubernetes cluster
 	if err := utils.ConfirmCRD(ctx, "providers.pkg.crossplane.io"); err != nil {
 		r.Recorder.Event(mission, "Warning", "Failed", "Crossplane installation not found")
 		return ctrl.Result{}, errors.New("could not find crossplane CRD \"Provider\"")
 	}
-	// Update mission providers installed status
+	// Ensure crossplane providers are installed in the kubernetes cluster
 	if err := ConfirmProviderConfigs(ctx, mission); err != nil {
 		r.Recorder.Event(mission, "Warning", "Failed", err.Error())
 		return ctrl.Result{}, err
 	}
 	r.Recorder.Event(mission, "Normal", "Success", "Mission correctly connected to Crossplane")
-	// Create ProviderConfig that resources will reference.
+	// Create ProviderConfigs that resources will reference.
 	if err := ReconcileProviderConfigs(ctx, r, mission); err != nil {
 		return ctrl.Result{}, err
 	}
 	r.Recorder.Event(mission, "Normal", "Success", "ProviderConfig correctly created")
-	// Confirm that mission key exists, if not create warning.
+	// Warn if mission keys are not created.
 	if err := ConfirmMissionKeys(ctx, r, mission); err != nil {
 		return ctrl.Result{}, err
 	}
