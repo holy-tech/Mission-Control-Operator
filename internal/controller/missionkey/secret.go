@@ -35,5 +35,5 @@ func (r *MissionKeyReconciler) ReconcileSecret(ctx context.Context, req ctrl.Req
 			Namespace: req.Namespace,
 		},
 	}
-	return r.ReconcileObject(ctx, key, &v1.Secret{}, secret)
+	return r.ReconcileObject(ctx, key, &v1.Secret{}, secret, "Data")
 }
