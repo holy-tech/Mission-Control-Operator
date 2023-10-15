@@ -21,12 +21,10 @@ import (
 	"errors"
 
 	runtime "k8s.io/apimachinery/pkg/runtime"
-	types "k8s.io/apimachinery/pkg/types"
 	record "k8s.io/client-go/tools/record"
 
 	ctrl "sigs.k8s.io/controller-runtime"
 
-	cpv1 "github.com/crossplane/crossplane/apis/pkg/v1"
 	awsv1 "github.com/upbound/provider-aws/apis/v1beta1"
 	azrv1 "github.com/upbound/provider-azure/apis/v1beta1"
 	gcpv1 "github.com/upbound/provider-gcp/apis/v1beta1"
@@ -73,12 +71,6 @@ func (r *MissionReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ct
 	}
 	r.Recorder.Event(mission, "Normal", "Success", "Mission keys correctly synced")
 	return ctrl.Result{}, nil
-}
-
-func (r *MissionReconciler) GetProvider(ctx context.Context, providerName string) (*cpv1.Provider, error) {
-	p := &cpv1.Provider{}
-	err := r.Get(ctx, types.NamespacedName{Name: providerName}, p)
-	return p, err
 }
 
 func (r *MissionReconciler) SetupWithManager(mgr ctrl.Manager) error {
