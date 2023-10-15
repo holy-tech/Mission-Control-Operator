@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package utils
+package clients
 
 import (
 	"context"
@@ -29,6 +29,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 
 	v1alpha1 "github.com/holy-tech/Mission-Control-Operator/api/mission/v1alpha1"
+	utils "github.com/holy-tech/Mission-Control-Operator/internal/controller/utils"
 )
 
 type MissionClient struct {
@@ -59,8 +60,8 @@ func (r *MissionClient) GetMissionKey(ctx context.Context, mission *v1alpha1.Mis
 }
 
 func (m *MissionClient) ReconcileObject(ctx context.Context, owner metav1.Object, object, expectedObject client.Object) error {
-	pcSpec := GetValueOf(object, "Spec")
-	epcSpec := GetValueOf(expectedObject, "Spec")
+	pcSpec := utils.GetValueOf(object, "Spec")
+	epcSpec := utils.GetValueOf(expectedObject, "Spec")
 	if pcSpec.Equal(reflect.Value{}) || epcSpec.Equal(reflect.Value{}) {
 		return errors.New("Could not reconcile object type")
 	}
@@ -74,7 +75,7 @@ func (m *MissionClient) ReconcileObject(ctx context.Context, owner metav1.Object
 	} else if !reflect.DeepEqual(pcSpec, epcSpec) {
 		expectedObject.SetUID(object.GetUID())
 		expectedObject.SetResourceVersion(object.GetResourceVersion())
-		if err := SetValueOf(object, "Spec", epcSpec); err != nil {
+		if err := utils.SetValueOf(object, "Spec", epcSpec); err != nil {
 			return err
 		}
 		err := m.Update(ctx, object)
