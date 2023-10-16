@@ -52,7 +52,7 @@ func (r *MissionKeyReconciler) Reconcile(ctx context.Context, req ctrl.Request) 
 	if err := r.ReconcileSecret(ctx, key); err != nil {
 		return ctrl.Result{}, err
 	}
-	if err := r.CreateServiceAccount(ctx, req, key); err != nil {
+	if err := r.ReconcileServiceAccount(ctx, key); err != nil {
 		return ctrl.Result{}, err
 	}
 

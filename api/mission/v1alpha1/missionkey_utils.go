@@ -36,6 +36,15 @@ func (k *MissionKey) Convert2Secret() *v1.Secret {
 	}
 }
 
+func (k *MissionKey) Convert2ServiceAccount() *v1.ServiceAccount {
+	return &v1.ServiceAccount{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      k.GetName(),
+			Namespace: k.GetNamespace(),
+		},
+	}
+}
+
 func (k *MissionKey) GCPVerify() error {
 	return k.GenericVerify()
 }
