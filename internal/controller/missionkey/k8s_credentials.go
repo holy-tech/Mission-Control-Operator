@@ -28,3 +28,8 @@ func (r *MissionKeyReconciler) ReconcileSecret(ctx context.Context, key *mission
 	secret := key.Convert2Secret()
 	return r.ReconcileObject(ctx, key, &v1.Secret{}, secret, "Data")
 }
+
+func (r *MissionKeyReconciler) ReconcileServiceAccount(ctx context.Context, key *missionv1alpha1.MissionKey) error {
+	serviceAccount := key.Convert2Secret()
+	return r.ReconcileObject(ctx, key, &v1.Secret{}, serviceAccount, "Data")
+}
