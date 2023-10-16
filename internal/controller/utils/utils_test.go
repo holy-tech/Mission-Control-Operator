@@ -17,6 +17,7 @@ limitations under the License.
 package utils
 
 import (
+	"fmt"
 	"reflect"
 	"testing"
 )
@@ -177,4 +178,24 @@ func TestGetValueOf(t *testing.T) {
 	if s.SubObject != "struct" {
 		t.Fail()
 	}
+	result = GetValueOf(obj, "PointerObject")
+	if result.Kind() != reflect.Pointer {
+		t.Fail()
+	}
+	p := result.Interface().(*TestSubObject)
+	if p.SubObject != "pointer" {
+		t.Fail()
+	}
+}
+
+func TestSetValueOf(t *testing.T) {
+	obj := TestObject{
+		"one", 1, []string{"one", "1"}, map[string]string{"one": "1"}, TestSubObject{"one"}, &TestSubObject{"one"},
+	}
+	obj2 := TestObject{
+		"two", 2, []string{"two", "2"}, map[string]string{"two": "2"}, TestSubObject{"one"}, &TestSubObject{"two"},
+	}
+	fmt.Print(obj.ListObject)
+	SetValueOf(obj, obj2, "PointerObject")
+	fmt.Print(obj.ListObject)
 }
