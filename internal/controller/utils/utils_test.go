@@ -21,6 +21,18 @@ import (
 	"testing"
 )
 
+type TestSubObject struct {
+	SubObject string
+}
+
+type TestObject struct {
+	StringObject string
+	IntObject    int
+	ListObject   []string
+	MapObject    map[string]string
+	StructObject TestSubObject
+}
+
 func TestGetValues(t *testing.T) {
 	result := GetValues(map[string]string{"a": "A"})
 	if !reflect.DeepEqual(result, []string{"a"}) {
@@ -120,6 +132,49 @@ func TestRemoveString(t *testing.T) {
 	}
 	result = RemoveString([]string{}, "a")
 	if !SameList(result, []string{}) {
+		t.Fail()
+	}
+}
+
+func TestGetValueOf(t *testing.T) {
+	obj := TestObject{
+		"string", 1, []string{"list", "object"}, map[string]string{"map": "object"}, TestSubObject{"struct"},
+	}
+	result := GetValueOf(obj, "StringObject")
+	if result.Kind() != reflect.String {
+		t.Fail()
+	}
+	if result.String() != "string" {
+		t.Fail()
+	}
+	result = GetValueOf(obj, "IntObject")
+	if result.Kind() != reflect.Int {
+		t.Fail()
+	}
+	if result.Int() != 1 {
+		t.Fail()
+	}
+	result = GetValueOf(obj, "ListObject")
+	if result.Kind() != reflect.Slice {
+		t.Fail()
+	}
+	if !SameList(result.Interface().([]string), []string{"list", "object"}) {
+		t.Fail()
+	}
+	result = GetValueOf(obj, "MapObject")
+	if result.Kind() != reflect.Map {
+		t.Fail()
+	}
+	m := result.Interface().(map[string]string)
+	if m["map"] != "object" {
+		t.Fail()
+	}
+	result = GetValueOf(obj, "StructObject")
+	if result.Kind() != reflect.Struct {
+		t.Fail()
+	}
+	s := result.Interface().(TestSubObject)
+	if s.SubObject != "struct" {
 		t.Fail()
 	}
 }
