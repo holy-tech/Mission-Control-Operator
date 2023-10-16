@@ -24,7 +24,7 @@ import (
 	ctrl "sigs.k8s.io/controller-runtime"
 
 	storagev1alpha1 "github.com/holy-tech/Mission-Control-Operator/api/storage/v1alpha1"
-	utils "github.com/holy-tech/Mission-Control-Operator/internal/controller/utils"
+	clients "github.com/holy-tech/Mission-Control-Operator/internal/controller/clients"
 
 	awsstoragev1 "github.com/upbound/provider-aws/apis/s3/v1beta1"
 	gcpstoragev1 "github.com/upbound/provider-gcp/apis/storage/v1beta1"
@@ -32,7 +32,7 @@ import (
 
 // StorageBucketsReconciler reconciles a StorageBuckets object
 type StorageBucketsReconciler struct {
-	utils.MissionClient
+	clients.MissionClient
 	Scheme   *runtime.Scheme
 	Recorder record.EventRecorder
 }

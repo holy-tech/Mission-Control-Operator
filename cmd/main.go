@@ -39,9 +39,9 @@ import (
 	computev1alpha1 "github.com/holy-tech/Mission-Control-Operator/api/compute/v1alpha1"
 	missionv1alpha1 "github.com/holy-tech/Mission-Control-Operator/api/mission/v1alpha1"
 	storagev1alpha1 "github.com/holy-tech/Mission-Control-Operator/api/storage/v1alpha1"
+	clients "github.com/holy-tech/Mission-Control-Operator/internal/controller/clients"
 	missioncontroler "github.com/holy-tech/Mission-Control-Operator/internal/controller/mission"
 	missionkeycontroler "github.com/holy-tech/Mission-Control-Operator/internal/controller/missionkey"
-	utils "github.com/holy-tech/Mission-Control-Operator/internal/controller/utils"
 	//+kubebuilder:scaffold:imports
 )
 
@@ -105,7 +105,7 @@ func main() {
 	}
 
 	if err = (&missioncontroler.MissionReconciler{
-		MissionClient: utils.MissionClient{
+		MissionClient: clients.MissionClient{
 			Client: mgr.GetClient(),
 		},
 		Scheme:   mgr.GetScheme(),
@@ -115,14 +115,16 @@ func main() {
 		os.Exit(1)
 	}
 	if err = (&missionkeycontroler.MissionKeyReconciler{
-		Client: mgr.GetClient(),
+		MissionClient: clients.MissionClient{
+			Client: mgr.GetClient(),
+		},
 		Scheme: mgr.GetScheme(),
 	}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "MissionKey")
 		os.Exit(1)
 	}
 	// if err = (&computecontroller.VirtualMachineReconciler{
-	// 	MissionClient: utils.MissionClient{
+	// 	MissionClient: clients.MissionClient{
 	// 		Client: mgr.GetClient(),
 	// 	},
 	// 	Scheme: mgr.GetScheme(),
@@ -131,7 +133,7 @@ func main() {
 	// 	os.Exit(1)
 	// }
 	// if err = (&storagecontroller.StorageBucketsReconciler{
-	// 	MissionClient: utils.MissionClient{
+	// 	MissionClient: clients.MissionClient{
 	// 		Client: mgr.GetClient(),
 	// 	},
 	// 	Scheme: mgr.GetScheme(),
