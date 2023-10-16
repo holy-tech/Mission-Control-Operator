@@ -198,28 +198,28 @@ func TestSetValueOf(t *testing.T) {
 	if obj.StringObject != "one" {
 		t.Fail()
 	}
-	SetValueOf(obj, obj2, "StringObject")
+	_ = SetValueOf(obj, obj2, "StringObject")
 	if obj.StringObject != "two" {
 		t.Fail()
 	}
 	if obj.IntObject != 1 {
 		t.Fail()
 	}
-	SetValueOf(obj, obj2, "IntObject")
+	_ = SetValueOf(obj, obj2, "IntObject")
 	if obj.IntObject != 2 {
 		t.Fail()
 	}
 	if obj.StructObject.SubObject != "one" {
 		t.Fail()
 	}
-	SetValueOf(obj, obj2, "StructObject")
+	_ = SetValueOf(obj, obj2, "StructObject")
 	if obj.StructObject.SubObject != "two" {
 		t.Fail()
 	}
 	if obj.PointerObject.SubObject != "one" {
 		t.Fail()
 	}
-	SetValueOf(obj, obj2, "PointerObject")
+	_ = SetValueOf(obj, obj2, "PointerObject")
 	if obj.PointerObject.SubObject != "two" {
 		t.Fail()
 	}
