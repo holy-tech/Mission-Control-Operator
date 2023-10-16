@@ -26,11 +26,12 @@ type TestSubObject struct {
 }
 
 type TestObject struct {
-	StringObject string
-	IntObject    int
-	ListObject   []string
-	MapObject    map[string]string
-	StructObject TestSubObject
+	StringObject  string
+	IntObject     int
+	ListObject    []string
+	MapObject     map[string]string
+	StructObject  TestSubObject
+	PointerObject *TestSubObject
 }
 
 func TestGetValues(t *testing.T) {
@@ -138,7 +139,7 @@ func TestRemoveString(t *testing.T) {
 
 func TestGetValueOf(t *testing.T) {
 	obj := TestObject{
-		"string", 1, []string{"list", "object"}, map[string]string{"map": "object"}, TestSubObject{"struct"},
+		"string", 1, []string{"list", "object"}, map[string]string{"map": "object"}, TestSubObject{"struct"}, &TestSubObject{"pointer"},
 	}
 	result := GetValueOf(obj, "StringObject")
 	if result.Kind() != reflect.String {
@@ -165,8 +166,7 @@ func TestGetValueOf(t *testing.T) {
 	if result.Kind() != reflect.Map {
 		t.Fail()
 	}
-	m := result.Interface().(map[string]string)
-	if m["map"] != "object" {
+	if result.Interface().(map[string]string)["map"] != "object" {
 		t.Fail()
 	}
 	result = GetValueOf(obj, "StructObject")
