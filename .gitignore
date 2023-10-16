@@ -27,3 +27,4 @@ Dockerfile.cross
 *~
 
 hack/*/private/*
+*__debug_bin*
