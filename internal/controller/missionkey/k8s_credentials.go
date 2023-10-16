@@ -20,20 +20,16 @@ import (
 	"context"
 
 	v1 "k8s.io/api/core/v1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-
-	ctrl "sigs.k8s.io/controller-runtime"
 
 	missionv1alpha1 "github.com/holy-tech/Mission-Control-Operator/api/mission/v1alpha1"
 )
 
-func (r *MissionKeyReconciler) ReconcileSecret(ctx context.Context, req ctrl.Request, key *missionv1alpha1.MissionKey) error {
-	secret := &v1.Secret{
-		Data: map[string][]byte{"creds": key.Spec.Data},
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      req.Name,
-			Namespace: req.Namespace,
-		},
-	}
+func (r *MissionKeyReconciler) ReconcileSecret(ctx context.Context, key *missionv1alpha1.MissionKey) error {
+	secret := key.Convert2Secret()
 	return r.ReconcileObject(ctx, key, &v1.Secret{}, secret, "Data")
+}
+
+func (r *MissionKeyReconciler) ReconcileServiceAccount(ctx context.Context, key *missionv1alpha1.MissionKey) error {
+	serviceAccount := key.Convert2ServiceAccount()
+	return r.ReconcileObject(ctx, key, &v1.Secret{}, serviceAccount, "Data")
 }

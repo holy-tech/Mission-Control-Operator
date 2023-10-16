@@ -20,8 +20,30 @@ import (
 	"errors"
 	"fmt"
 
+	v1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+
 	utils "github.com/holy-tech/Mission-Control-Operator/internal/controller/utils"
 )
+
+func (k *MissionKey) Convert2Secret() *v1.Secret {
+	return &v1.Secret{
+		Data: map[string][]byte{"creds": k.Spec.Data},
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      k.GetName(),
+			Namespace: k.GetNamespace(),
+		},
+	}
+}
+
+func (k *MissionKey) Convert2ServiceAccount() *v1.ServiceAccount {
+	return &v1.ServiceAccount{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      k.GetName(),
+			Namespace: k.GetNamespace(),
+		},
+	}
+}
 
 func (k *MissionKey) GCPVerify() error {
 	return k.GenericVerify()
