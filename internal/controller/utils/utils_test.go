@@ -139,7 +139,7 @@ func TestRemoveString(t *testing.T) {
 }
 
 func TestGetValueOf(t *testing.T) {
-	obj := TestObject{
+	obj := &TestObject{
 		"string", 1, []string{"list", "object"}, map[string]string{"map": "object"}, TestSubObject{"struct"}, &TestSubObject{"pointer"},
 	}
 	result := GetValueOf(obj, "StringObject")

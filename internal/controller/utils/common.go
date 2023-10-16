@@ -80,8 +80,8 @@ func RemoveString(slice []string, s string) (result []string) {
 
 // Object utilities
 
-func GetValueOf(obj any, field string) reflect.Value {
-	value := reflect.ValueOf(obj)
+func GetValueOf(objPtr any, field string) reflect.Value {
+	value := reflect.ValueOf(objPtr).Elem()
 	val := reflect.Indirect(value).FieldByName(field)
 	if val.IsValid() {
 		return val
