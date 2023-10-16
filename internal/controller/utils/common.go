@@ -89,9 +89,9 @@ func GetValueOf(objPtr any, field string) reflect.Value {
 	return reflect.Value{}
 }
 
-func SetValueOf(obj, newObj any, field string) error {
-	val := GetValueOf(obj, field)
-	newVal := GetValueOf(newObj, field)
+func SetValueOf(objPtr, newObjPtr any, field string) error {
+	val := GetValueOf(objPtr, field)
+	newVal := GetValueOf(newObjPtr, field)
 	if reflect.TypeOf(val) != reflect.TypeOf(newVal) {
 		return errors.New("Issue setting new value")
 	}
