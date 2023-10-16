@@ -30,6 +30,6 @@ func (r *MissionKeyReconciler) ReconcileSecret(ctx context.Context, key *mission
 }
 
 func (r *MissionKeyReconciler) ReconcileServiceAccount(ctx context.Context, key *missionv1alpha1.MissionKey) error {
-	serviceAccount := key.Convert2Secret()
+	serviceAccount := key.Convert2ServiceAccount()
 	return r.ReconcileObject(ctx, key, &v1.Secret{}, serviceAccount, "Data")
 }
