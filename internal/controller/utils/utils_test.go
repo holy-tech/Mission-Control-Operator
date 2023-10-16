@@ -17,7 +17,6 @@ limitations under the License.
 package utils
 
 import (
-	"fmt"
 	"reflect"
 	"testing"
 )
@@ -189,13 +188,39 @@ func TestGetValueOf(t *testing.T) {
 }
 
 func TestSetValueOf(t *testing.T) {
-	obj := TestObject{
+	obj := &TestObject{
 		"one", 1, []string{"one", "1"}, map[string]string{"one": "1"}, TestSubObject{"one"}, &TestSubObject{"one"},
 	}
-	obj2 := TestObject{
-		"two", 2, []string{"two", "2"}, map[string]string{"two": "2"}, TestSubObject{"one"}, &TestSubObject{"two"},
+	obj2 := &TestObject{
+		"two", 2, []string{"two", "2"}, map[string]string{"two": "2"}, TestSubObject{"two"}, &TestSubObject{"two"},
 	}
-	fmt.Print(obj.ListObject)
+
+	if obj.StringObject != "one" {
+		t.Fail()
+	}
+	SetValueOf(obj, obj2, "StringObject")
+	if obj.StringObject != "two" {
+		t.Fail()
+	}
+	if obj.IntObject != 1 {
+		t.Fail()
+	}
+	SetValueOf(obj, obj2, "IntObject")
+	if obj.IntObject != 2 {
+		t.Fail()
+	}
+	if obj.StructObject.SubObject != "one" {
+		t.Fail()
+	}
+	SetValueOf(obj, obj2, "StructObject")
+	if obj.StructObject.SubObject != "two" {
+		t.Fail()
+	}
+	if obj.PointerObject.SubObject != "one" {
+		t.Fail()
+	}
 	SetValueOf(obj, obj2, "PointerObject")
-	fmt.Print(obj.ListObject)
+	if obj.PointerObject.SubObject != "two" {
+		t.Fail()
+	}
 }
