@@ -89,11 +89,15 @@ func GetValueOf(obj any, field string) reflect.Value {
 	return reflect.Value{}
 }
 
-func SetValueOf(obj any, field string, newValue any) error {
+func SetValueOf(obj, newObj any, field string) error {
 	val := GetValueOf(obj, field)
-	if reflect.TypeOf(val) != reflect.TypeOf(newValue) || !val.CanSet() {
+	newVal := GetValueOf(newObj, field)
+	if reflect.TypeOf(val) != reflect.TypeOf(newVal) {
 		return errors.New("Issue setting new value")
 	}
-	val.Set(reflect.ValueOf(newValue))
+	if !val.CanSet() {
+		return errors.New("Could not set new value")
+	}
+	val.Set(newVal)
 	return nil
 }
