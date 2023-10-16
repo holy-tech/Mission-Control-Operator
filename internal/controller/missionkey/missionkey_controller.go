@@ -49,7 +49,7 @@ func (r *MissionKeyReconciler) Reconcile(ctx context.Context, req ctrl.Request) 
 	if err := key.GenericVerify(); err != nil {
 		r.Recorder.Event(key, "Warning", "Failed", err.Error())
 	}
-	if err := r.ReconcileSecret(ctx, req, key); err != nil {
+	if err := r.ReconcileSecret(ctx, key); err != nil {
 		return ctrl.Result{}, err
 	}
 	if err := r.CreateServiceAccount(ctx, req, key); err != nil {
