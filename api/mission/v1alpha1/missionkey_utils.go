@@ -23,19 +23,16 @@ import (
 	utils "github.com/holy-tech/Mission-Control-Operator/internal/controller/utils"
 )
 
-func (k *MissionKey) GCPVerify() bool {
-	k.GenericVerify()
-	return true
+func (k *MissionKey) GCPVerify() error {
+	return k.GenericVerify()
 }
 
-func (k *MissionKey) AWSVerify() bool {
-	k.GenericVerify()
-	return true
+func (k *MissionKey) AWSVerify() error {
+	return k.GenericVerify()
 }
 
-func (k *MissionKey) AzureVerify() bool {
-	k.GenericVerify()
-	return true
+func (k *MissionKey) AzureVerify() error {
+	return k.GenericVerify()
 }
 
 func (k *MissionKey) GenericVerify() error {

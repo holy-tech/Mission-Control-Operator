@@ -80,8 +80,8 @@ func RemoveString(slice []string, s string) (result []string) {
 
 // Object utilities
 
-func GetValueOf(obj any, field string) reflect.Value {
-	value := reflect.ValueOf(obj)
+func GetValueOf(objPtr any, field string) reflect.Value {
+	value := reflect.ValueOf(objPtr).Elem()
 	val := reflect.Indirect(value).FieldByName(field)
 	if val.IsValid() {
 		return val
@@ -89,11 +89,15 @@ func GetValueOf(obj any, field string) reflect.Value {
 	return reflect.Value{}
 }
 
-func SetValueOf(obj any, field string, newValue any) error {
-	val := GetValueOf(obj, field)
-	if reflect.TypeOf(val) != reflect.TypeOf(newValue) || !val.CanSet() {
+func SetValueOf(objPtr, newObjPtr any, field string) error {
+	val := GetValueOf(objPtr, field)
+	newVal := GetValueOf(newObjPtr, field)
+	if reflect.TypeOf(val) != reflect.TypeOf(newVal) {
 		return errors.New("Issue setting new value")
 	}
-	val.Set(reflect.ValueOf(newValue))
+	if !val.CanSet() {
+		return errors.New("Could not set new value")
+	}
+	val.Set(newVal)
 	return nil
 }

@@ -72,14 +72,16 @@ func (m *MissionClient) ReconcileObject(ctx context.Context, owner metav1.Object
 	if err := controllerutil.SetControllerReference(owner, expectedObject, m.Scheme()); err != nil {
 		return err
 	}
-	if err := m.Get(ctx, types.NamespacedName{Name: expectedObject.GetName()}, object); err != nil {
+	nsName := types.NamespacedName{
+		Name:      expectedObject.GetName(),
+		Namespace: expectedObject.GetNamespace(),
+	}
+	if err := m.Get(ctx, nsName, object); err != nil {
 		if k8serrors.IsNotFound(err) {
 			return m.Create(ctx, expectedObject)
 		}
 	} else if !reflect.DeepEqual(pcSpec, epcSpec) {
-		expectedObject.SetUID(object.GetUID())
-		expectedObject.SetResourceVersion(object.GetResourceVersion())
-		if err := utils.SetValueOf(object, specPath, epcSpec); err != nil {
+		if err := utils.SetValueOf(object, expectedObject, specPath); err != nil {
 			return err
 		}
 		err := m.Update(ctx, object)
